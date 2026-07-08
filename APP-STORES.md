@@ -1,4 +1,4 @@
-# SnowDoku → App Stores playbook
+# SlopeDoku (OpenDoku) → App Stores playbook
 
 The site is now a full PWA (manifest + offline service worker + icons), which
 is the foundation for both stores. Current fastest paths:
@@ -28,7 +28,7 @@ fastest way to put it in testers' hands today.
    files (web-dir), not a URL.
 
 ## Store listing basics (both stores)
-- Name: SnowDoku — winter brain games
+- Name: SlopeDoku — winter brain games (an OpenDoku game)
 - Subtitle: Sudoku × winter sports. No luck, no crying.
 - Category: Puzzle
 - Price: free to start; the $3 goal fits better as "paid up front" on

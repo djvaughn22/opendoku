@@ -1,4 +1,4 @@
-# SnowDoku (snowdoku.com)
+# SlopeDoku — an OpenDoku game (opendoku.com · snowdoku.com)
 
 Winter brain games in Roman numerals — born as an iDontCry idea, built
 through StepInTheRing.com. One static file, no build step.
@@ -15,7 +15,7 @@ and push — Vercel deploys `main`.
 
 ## Building the next doku (the engine seed pattern)
 
-SnowDoku is the first game on the Open Mirror Puzzle Engine. The engine is
+SlopeDoku is the first game of the OpenDoku series, built on the Open Mirror Puzzle Engine. The engine is
 this one file — deliberately: one static file deploys anywhere, embeds
 anywhere, works offline, and has zero dependencies to break.
 
