@@ -48,3 +48,19 @@ To create SuitDoku / DogDoku / BibleDoku / ColorDoku / etc.:
 - [ ] Daily puzzle mode (seeded deal-of-the-day)
 - [ ] Puzzle pack (100+ pregenerated deals)
 - [ ] Capacitor/TWA wrappers (see APP-STORES.md)
+
+## Saved for later: the lanes & routes game (future OpenDoku title)
+
+SlopeDoku v1's "double black" was a movement puzzle: athletes entered the
+board from lanes and *traveled* by their sport's physics — skis straight
+down until blocked, snowboards carving diagonally off walls, skates gliding
+in from the side, snowshoes walking anywhere — and placed tiles became
+terrain that changed every later route. Provably-winnable deals came from a
+subset-memo reachability search over placement orders.
+
+That mechanic is retired from SlopeDoku (replaced by the 9×9 double-dual
+board) but it is a complete, original game concept of its own: lanes,
+routes, terrain, order-of-play strategy. Working name ideas: TrailDoku /
+LaneDoku. The full implementation lives in this repo's git history
+(pre-Jul-8-2026 index.html: landSki/landBoard/landSkate/movesFor/
+dealWinnable + lane arrows and ghost previews).
