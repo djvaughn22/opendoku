@@ -319,7 +319,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
         <li><span class="shp shpS"></span> <b>Blue:</b> 4&times;4 — every row, column and 2&times;2 box needs each numeral <b>I&ndash;IV</b> and each sport once.</li>
         <li><span class="shp shpD"></span> <b>Black diamond:</b> 9&times;9 — full sudoku with numerals <b>I&ndash;IX</b> AND nine winter sports, both sudoku-valid at once.</li>
         <li><span class="shp shpD"></span><span class="shp shpD"></span> <b>Double black:</b> Slopestyle — athletes ski to their tiles. 🎿 drop straight down, 🏂 carve diagonally off walls, ⛸️ hockey skates glide in from the side, 🥾 walk anywhere. Colored lanes show where each entry lands. Undo is free — the terrain is the trap.</li>
-        <li>The lineup is exactly the right cards to finish the board, and <b>only one finished mountain exists</b> — so every move can be figured out, sudoku-style, never guessed. Start where a row, column or box already has the most cards: somewhere, a cell will accept exactly one of your cards.</li>
+        <li>The lineup is exactly the right cards to finish the board, and <b>you never have to guess — guaranteed</b>. From the first tile to the last, there is always a cell that accepts exactly one of your cards, or a card with only one home. Start where a row, column or box is fullest, and if you can&rsquo;t see it, 💡 will.</li>
         <li>A move that breaks the rules — or would make the mountain impossible to finish — gets an <b>✗</b>, but the card comes back to you to try somewhere else. Mistakes add up: three ✗ in one run and you&rsquo;re out. Every deal is solvable.</li>
         <li>💡 is your coach — it glows a correct card and spot when you&rsquo;re stuck.</li>
         <li>Your game saves itself — close the app, come back, keep climbing. <button id="resetAll" style="padding:6px 12px;font-size:.8rem">Reset all progress</button></li>
@@ -685,6 +685,33 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
       rec(g.slice(),cards.slice());
       return count;
     }
+    /* NO-GUESS guarantee: can the whole board be finished using only
+       forced moves a human can deduce — a cell that accepts exactly one
+       hand card (naked single) or a card with exactly one legal cell
+       (hidden single)? If yes, the puzzle needs zero guessing at every
+       step, and the completion it forces is the unique solution. */
+    function logicSolvable(g0,cards0){
+      const nn=cfg().n*cfg().n;
+      const g=g0.slice();
+      let cards=cards0.slice();
+      while(cards.length){
+        let played=false;
+        for(let i=0;i<nn&&!played;i++){
+          if(g[i]) continue;
+          const fits=cards.filter(c=>!conflicts(g,i,c));
+          if(fits.length===1){g[i]=fits[0]; cards=cards.filter(c=>c!==fits[0]); played=true;}
+        }
+        if(!played){
+          for(let ci=0;ci<cards.length&&!played;ci++){
+            const cells=[];
+            for(let i=0;i<nn;i++) if(!g[i]&&!conflicts(g,i,cards[ci])) cells.push(i);
+            if(cells.length===1){g[cells[0]]=cards[ci]; cards=cards.toSpliced(ci,1); played=true;}
+          }
+        }
+        if(!played) return false;
+      }
+      return true;
+    }
     /* can the rest of the lineup still fill the board? (pure CSP) */
     function completable(g,cards){
       if(cards.length===0) return true;
@@ -743,13 +770,13 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
         sol=genBlack();
         fz=new Set(shuffle([...Array(81).keys()]).slice(0,31));
       }
-      /* one finished mountain only: add clues until the completion is unique,
-         so every deal is solvable by pure logic — never a guess */
+      /* add clues until the deal is provably NO-GUESS: finishable start to
+         end by forced moves alone (which also makes the solution unique) */
       if(level!=='green'){
         const open=shuffle(sol.map((_,i)=>i).filter(i=>!fz.has(i)));
         let g=sol.map((cd,i)=>fz.has(i)?cd:null);
         let cards=sol.filter((_,i)=>!fz.has(i));
-        while(open.length&&countSolutions(g,cards,2)>1){
+        while(open.length&&!logicSolvable(g,cards)){
           const step=cards.length>40?2:1;
           for(let k=0;k<step&&open.length;k++){
             const i=open.pop();
@@ -861,7 +888,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
       return 'that spot breaks a row, column or box';
     }
     function placeClassic(cellIdx){
-      if(sel===null||grid[cellIdx]) return;
+      if(sel===null||grid[cellIdx]||strikes>=3) return;
       const card=lineup[sel];
       if(conflicts(grid,cellIdx,card)){
         strike(cellIdx,`✗ — ${conflictReason(grid,cellIdx,card)}. The card is still yours — try another spot.`);
@@ -891,6 +918,16 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
             const ci=lineup.indexOf(fits[0]);
             pick={ci,cell:i};
             msg='💡 No guessing: only ONE of your cards fits the glowing cell — its row, column and box rule out everything else.';
+          }
+        }
+        if(!pick){
+          for(let ci=0;ci<lineup.length&&!pick;ci++){
+            const cells=[];
+            for(let i=0;i<nn;i++) if(!grid[i]&&!conflicts(grid,i,lineup[ci])) cells.push(i);
+            if(cells.length===1){
+              pick={ci,cell:cells[0]};
+              msg='💡 No guessing: the glowing card has only ONE cell it can live in — everywhere else is ruled out.';
+            }
           }
         }
       }
@@ -939,7 +976,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
       const c=cfg();
       const ids={green:'lvGreen',blue:'lvBlue',black:'lvBlack',dblack:'lvDblack'};
       for(const l in ids) $(ids[l]).classList.toggle('modeOn',l===level);
-      $('ftStrikes').textContent=c.physics?'':'✗'.repeat(strikes)+'·'.repeat(3-strikes);
+      $('ftStrikes').textContent=c.physics?'':'✗'.repeat(Math.min(3,strikes))+'·'.repeat(Math.max(0,3-strikes));
       $('ftWins').textContent='🏔️×'+(localStorage.getItem('sd_tracks_wins')||'0');
       const card=sel!==null?lineup[sel]:null;
       const slopeHints={0:'Skis drop from the top — tap a lit ▼. Lanes show the landing.',
@@ -947,8 +984,8 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
                    2:'Hockey skates glide in from the side — tap ▶ or ◀. Lanes show the landing.',
                    3:'Snowshoes walk anywhere — tap a lit cell.'};
       const idle={green:'Bunny slope — four cards, four cells, every card fits. Pick one up below.',
-                  blue:'One finished mountain exists — pure logic, no guessing. Start where a row or box is fullest; 💡 finds a no-guess cell.',
-                  black:'Black diamond — 9×9, two sudokus at once, one solution. Stuck? 💡 finds a no-guess cell.',
+                  blue:'No guessing, ever — a forced move always exists, first tile to last. Start where a row or box is fullest; 💡 finds it.',
+                  black:'Black diamond — 9×9, two sudokus at once. A no-guess move always exists; 💡 finds it.',
                   dblack:'Double black — pick an athlete; they ski to their tile.'};
       const picked={green:'Now tap any green cell — on the bunny slope, every spot works!',
                     blue:'Tap any open cell — a wrong spot costs an ✗ but you keep the card.',
