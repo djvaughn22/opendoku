@@ -12,7 +12,9 @@
 <script>
 /* PWA wiring — only on snowdoku.com itself (not the idontcry embed):
    manifest + icons + offline service worker = installable app. */
-if(window.parent===window && /(^|\.)snowdoku\.com$/.test(location.hostname)){
+if(window.parent===window && new RegExp('(^|\\.)snowdoku\\.com$').test(location.hostname)){
+  /* PWA activates on the production domain only (keep in sync with GAME.domain
+     on rename — this guard runs before the THEME ZONE exists) */
   const l1=document.createElement('link'); l1.rel='manifest'; l1.href='/manifest.json';
   const l2=document.createElement('link'); l2.rel='apple-touch-icon'; l2.href='/icons/apple-touch-icon.png';
   document.head.append(l1,l2);
@@ -390,7 +392,7 @@ if(window.parent===window && /(^|\.)snowdoku\.com$/.test(location.hostname)){
 
 <footer class="om-foot">
   <div class="om-in">
-    <p>© 2026 <b>SnowDoku<span style="color:var(--accent)">.com</span></b> · Winter brain games in Roman numerals</p>
+    <p>© 2026 <b id="footBrand">SnowDoku<span style="color:var(--accent)">.com</span></b><span id="footTag"> · Winter brain games in Roman numerals</span></p>
     <p>
       <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">OPEN MIRROR LLC</a>
       &nbsp;·&nbsp;
@@ -412,8 +414,18 @@ if(window.parent===window && /(^|\.)snowdoku\.com$/.test(location.hostname)){
      math, validators, strikes, the 💡 coach, save/resume, timers, PWA.
      GAME = identity · SUITS = tile categories (9 for the 9×9 board) ·
      ROMAN = glyph track (10: 9 board glyphs + the merge-cap glyph). */
+  /* RENAME BEFORE LAUNCH? Change productName here — hero, title, bar,
+     footer and dialogs all render from it. Candidates on the table:
+     'Fresh Tracks Doku' · 'SlopeDoku' · 'Avalanche Doku'.
+     A rename must ALSO touch (JS can't reach these for crawlers/installs):
+       1. <head> meta description + og:title/og:description (this file)
+       2. manifest.json — name, short_name, description
+       3. /icons if the brand mark changes
+     Leave alone: localStorage sd_* keys (players' saves) and the
+     'snowdoku-height' postMessage type (embed protocol paired with
+     idontcry's SnowdokuGame.tsx) — internal, not branding. */
   const GAME={
-    name:'SnowDoku',
+    productName:'SnowDoku',
     domain:'snowdoku.com',
     tagline:'Winter brain games in Roman numerals',
     sub:'Every tile is two puzzles — the numeral and the sport must both fit.',
@@ -461,14 +473,18 @@ if(window.parent===window && /(^|\.)snowdoku\.com$/.test(location.hostname)){
     applyTheme(t);
   });
 
-  /* ---------- theme-zone injection: brand renders from GAME ---------- */
-  document.title=`${GAME.name}.com — ${GAME.tagline.toLowerCase()}`;
+  /* ---------- theme-zone injection: ALL naming renders from GAME ---------- */
+  const TLD='.'+GAME.domain.split('.').pop();
+  document.title=`${GAME.productName}${TLD} — ${GAME.tagline.toLowerCase()}`;
   document.querySelector('.hero h1').innerHTML=
-    `${GAME.name}<span>.${GAME.domain.split('.').pop()}</span>`;
+    `${GAME.productName}<span>${TLD}</span>`;
   document.querySelector('.hero .tag').textContent=GAME.tagline;
   document.querySelector('.hero .sub').textContent=GAME.sub;
   document.querySelector('.brand').textContent=GAME.brand;
   document.querySelector('.om-bar .site').textContent=GAME.domain.toUpperCase();
+  document.getElementById('footBrand').innerHTML=
+    `${GAME.productName}<span style="color:var(--accent)">${TLD}</span>`;
+  document.getElementById('footTag').textContent=' · '+GAME.tagline;
 
   /* ---------- tabs ---------- */
   let tab=null;
@@ -1247,7 +1263,7 @@ if(window.parent===window && /(^|\.)snowdoku\.com$/.test(location.hostname)){
     localStorage.setItem('sd_seen','1');
   }
   $('resetAll').addEventListener('click',()=>{
-    if(!confirm('Reset ALL SnowDoku progress on this device — saves, bests and summits?')) return;
+    if(!confirm(`Reset ALL ${GAME.productName} progress on this device — saves, bests and summits?`)) return;
     ['sd_ft_save','sd_av_save','sd_tracks_wins','sd_aval_best','sd_tracks_level','sd_tab','sd_seen']
       .forEach(k=>localStorage.removeItem(k));
     location.reload();
