@@ -7,6 +7,7 @@
 <meta name="description" content="Winter brain games in Roman numerals. Fresh Tracks: sudoku where every tile is two puzzles at once, from bunny slope to double black diamond. Avalanche: beat-the-clock merges that speed up every level.">
 <meta property="og:title" content="SnowDoku — winter brain games">
 <meta property="og:description" content="Sudoku × winter sports. Four slopes from bunny hill to double black diamond, plus Avalanche — a beat-the-clock merge game.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏔️</text></svg>">
 <style>
   :root{
     --bg:#0b1220; --panel:#141d2e; --border:#26324c;
@@ -34,40 +35,48 @@
   }
   a{color:var(--accent);}
   button{
-    font-family:inherit; font-size:.85rem; color:var(--ink);
-    background:var(--btn); border:1px solid var(--btnbd); border-radius:8px;
-    padding:8px 12px; cursor:pointer;
+    font-family:inherit; font-size:.92rem; color:var(--ink);
+    background:var(--btn); border:1px solid var(--btnbd); border-radius:10px;
+    padding:10px 14px; cursor:pointer;
   }
   button:active{transform:translateY(1px);}
   button:disabled{opacity:.3; cursor:default;}
   /* ---- Open Mirror chrome ---- */
   .om-bar{
-    width:100%; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--border);
+    width:100%; background:var(--panel); border-bottom:1px solid var(--border);
     font-family:system-ui,sans-serif;
   }
-  .om-bar a{font-weight:800; font-size:.9rem; color:var(--ink); text-decoration:none;}
-  .om-bar .right{display:flex; align-items:center; gap:10px;}
-  .om-bar .site{font-size:.68rem; font-weight:900; letter-spacing:.18em; color:var(--dim);}
-  #themeBtn{border-radius:50%; width:32px; height:32px; padding:0; font-size:.95rem;}
-  .om-foot{
-    width:100%; margin-top:auto; padding:22px 16px 26px; text-align:center;
-    background:var(--panel); border-top:1px solid var(--border);
-    font-family:system-ui,sans-serif; font-size:.75rem; color:var(--dim);
+  .om-in{
+    max-width:960px; margin:0 auto; padding:12px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
+  .om-bar a{font-weight:800; font-size:.95rem; color:var(--ink); text-decoration:none;}
+  .om-bar .right{display:flex; align-items:center; gap:10px;}
+  .om-bar .site{font-size:.7rem; font-weight:900; letter-spacing:.18em; color:var(--dim);}
+  #themeBtn{border-radius:50%; width:36px; height:36px; padding:0; font-size:1rem;}
+  .om-foot{
+    width:100%; margin-top:auto; background:var(--panel); border-top:1px solid var(--border);
+    font-family:system-ui,sans-serif; font-size:.8rem; color:var(--dim);
+  }
+  .om-foot .om-in{display:block; text-align:center; padding:24px 18px 28px;}
   .om-foot a{text-decoration:none; font-weight:900; color:var(--dim);}
   .om-foot .icons{text-decoration:none;}
-  .om-foot p{margin:4px 0;}
+  .om-foot p{margin:5px 0;}
   body.embedded .om-bar, body.embedded .om-foot, body.embedded .hero{display:none;}
   /* ---- hero + tabs ---- */
-  .app{width:100%; max-width:430px; padding:14px 14px 40px;}
-  .hero{text-align:center; padding:18px 0 6px;}
-  .hero h1{font-size:2rem; margin:0; letter-spacing:.5px;}
+  .app{width:100%; max-width:430px; padding:14px 14px 48px; margin:0 auto;}
+  .hero{text-align:center; padding:22px 0 6px;}
+  .brand{
+    width:76px; height:76px; margin:0 auto 12px; border-radius:24px;
+    background:var(--panel); border:2px solid var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:2.5rem;
+  }
+  .hero h1{font-size:2.1rem; margin:0; letter-spacing:.5px;}
   .hero h1 span{color:var(--accent);}
-  .hero .tag{margin:6px 0 0; font-size:.85rem; font-weight:bold; color:var(--accent);}
-  .hero .sub{margin:4px 0 0; font-size:.75rem; color:var(--dim); font-style:italic;}
-  .tabs{display:flex; gap:8px; margin:16px 0 12px;}
-  .tabs button{flex:1; padding:11px 6px; font-size:.9rem; border-radius:12px;}
+  .hero .tag{margin:7px 0 0; font-size:.95rem; font-weight:bold; color:var(--accent);}
+  .hero .sub{margin:5px 0 0; font-size:.82rem; color:var(--dim); font-style:italic;}
+  .tabs{display:flex; gap:8px; margin:18px 0 14px;}
+  .tabs button{flex:1; padding:14px 6px; font-size:1rem; border-radius:12px;}
   .tabs button.on{border-color:var(--accent); color:var(--accent); font-weight:bold;}
   .screen{display:none;}
   .screen.on{display:block;}
@@ -136,17 +145,42 @@
   #ftLineup.lv9chips .chip .num{font-size:.6rem;}
   .hintFlash{outline:3px solid #ffd76a; outline-offset:-2px;}
   .bar{display:flex; gap:8px; margin-top:12px; align-items:center;}
-  .hint{font-size:.78rem; color:var(--dim); margin-top:10px; min-height:1.2em;}
+  .hint{font-size:.88rem; color:var(--dim); margin-top:10px; min-height:1.25em;}
+  .objective{
+    margin:0 0 10px; padding:10px 14px; border-radius:12px;
+    background:var(--panel); border:1px solid var(--border);
+    font-size:.85rem; color:var(--dim);
+  }
+  .objective b{color:var(--ink);}
   /* ---- avalanche ---- */
+  #avBoardWrap{position:relative;}
+  #avArrows{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; margin-bottom:5px;}
+  #avArrows button{padding:7px 0; font-size:1rem; border-radius:8px; color:var(--accent);}
   #avBoard{
     display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px;
     background:var(--panel); border:1px solid var(--border); padding:8px; border-radius:14px;
   }
   #avBoard .cell{border-radius:6px;}
-  #avBoard .cell .suit{font-size:1.05rem;}
-  #avBoard .cell .num{font-size:.72rem;}
-  #avBoard .cell .num.long{font-size:.6rem;}
-  .avTop{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:.85rem; color:var(--dim);}
+  #avBoard .cell.laneB{filter:brightness(1.22);}
+  #avBoard .cell .suit{font-size:1.15rem;}
+  #avBoard .cell .num{font-size:.78rem;}
+  #avBoard .cell .num.long{font-size:.64rem;}
+  .pts{
+    position:absolute; z-index:5; pointer-events:none;
+    font-family:system-ui,sans-serif; font-weight:900; font-size:.95rem; color:var(--ok);
+    animation:rise .95s ease-out forwards; text-shadow:0 1px 4px rgba(0,0,0,.5);
+  }
+  @keyframes rise{from{opacity:1; transform:translateY(0);} to{opacity:0; transform:translateY(-38px);}}
+  #avReady{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:22px 20px; text-align:center;
+  }
+  #avReady h3{margin:0 0 8px; font-size:1.25rem;}
+  #avReady p{margin:0 0 6px; font-size:.92rem; color:var(--dim); line-height:1.55;}
+  #avReady ol{margin:10px auto 16px; padding-left:22px; max-width:300px; text-align:left; font-size:.92rem; color:var(--dim); line-height:1.7;}
+  #avReady b{color:var(--ink);}
+  #avStart{font-size:1.1rem; padding:13px 34px; border-color:var(--accent); color:var(--accent); font-weight:bold; border-radius:50px;}
+  .avTop{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:.95rem; color:var(--dim);}
   .avTop b{color:var(--ink);}
   .avNow{
     display:flex; align-items:center; gap:12px; background:var(--panel);
@@ -168,24 +202,27 @@
   .ov h2{margin:0 0 8px; font-size:1.4rem;}
   .ov p{color:var(--dim); font-size:.9rem; margin:0 0 18px;}
   .ov .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
-  details{margin-top:14px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:10px 14px; font-size:.82rem; color:var(--dim);}
-  details summary{cursor:pointer; color:var(--ink);}
-  details li{margin:6px 0;}
+  details{margin-top:14px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 16px; font-size:.9rem; color:var(--dim);}
+  details summary{cursor:pointer; color:var(--ink); font-size:1rem; font-weight:bold; padding:2px 0;}
+  details li{margin:9px 0; line-height:1.55;}
 </style>
 </head>
 <body data-theme="dark">
 
 <header class="om-bar">
-  <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>
-  <span class="right">
-    <span class="site">SNOWDOKU.COM</span>
-    <button id="themeBtn" title="Light / dark">🌙</button>
-  </span>
+  <div class="om-in">
+    <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>
+    <span class="right">
+      <span class="site">SNOWDOKU.COM</span>
+      <button id="themeBtn" title="Light / dark">🌙</button>
+    </span>
+  </div>
 </header>
 
 <div class="app">
 
   <div class="hero">
+    <div class="brand" aria-hidden="true">🏔️</div>
     <h1>SnowDoku<span>.com</span></h1>
     <p class="tag">Winter brain games in Roman numerals</p>
     <p class="sub">Every tile is two puzzles — the numeral and the sport must both fit.</p>
@@ -238,32 +275,51 @@
       <h2>Avalanche</h2>
       <button id="avNew">New run</button>
     </header>
-    <div class="avTop">
-      <span>Score <b id="avScore">0</b></span>
-      <span>Best <b id="avBest">0</b></span>
-      <span>Level <b id="avLevel">1</b></span>
+    <p class="objective">🎯 <b>The goal:</b> keep the mountain from filling up. Matching numerals melt together — merge, score, survive.</p>
+
+    <div id="avReady">
+      <h3>❄️ Ready to ride?</h3>
+      <p>Tiles fall onto the mountain, one at a time.</p>
+      <ol>
+        <li>Tap a <b>▼ lane</b> to drop the tile where you want it.</li>
+        <li>Touching tiles with the <b>same numeral merge</b> into a bigger one.</li>
+        <li>Beat the clock — wait too long and the tile drops itself!</li>
+      </ol>
+      <button id="avStart">▶ Start the run</button>
     </div>
-    <div class="avNow">
-      <div class="chip cur" id="avCur"></div>
-      <div class="meta">
-        <div class="lbl">Drop before the clock does</div>
-        <div id="avTimer"><div id="avTimerBar"></div></div>
+
+    <div id="avGame" hidden>
+      <div class="avTop">
+        <span>Score <b id="avScore">0</b></span>
+        <span>Best <b id="avBest">0</b></span>
+        <span>Level <b id="avLevel">1</b></span>
       </div>
-      <div>
-        <div class="lbl" style="text-align:center">Next</div>
-        <div class="chip" id="avNext" style="margin-top:2px"></div>
+      <div class="avNow">
+        <div class="chip cur" id="avCur"></div>
+        <div class="meta">
+          <div class="lbl">Drop before the clock does</div>
+          <div id="avTimer"><div id="avTimerBar"></div></div>
+        </div>
+        <div>
+          <div class="lbl" style="text-align:center">Next</div>
+          <div class="chip" id="avNext" style="margin-top:2px"></div>
+        </div>
       </div>
+      <div id="avBoardWrap">
+        <div id="avArrows"></div>
+        <div id="avBoard"></div>
+      </div>
+      <div class="hint" id="avHint">Tap a ▼ lane to drop.</div>
     </div>
-    <div id="avBoard"></div>
-    <div class="hint" id="avHint">Tap a column to drop.</div>
+
     <details>
       <summary>How to play</summary>
       <ul>
-        <li>Tap a column to drop the numeral <b>before the clock drops it for you</b> — run out of time and it falls somewhere random.</li>
-        <li>Equal neighbours merge upward: I+I&rarr;II &hellip; IX+IX&rarr;X. Two X&rsquo;s vanish for a big bonus.</li>
-        <li>Same-sport merges score double, and every point is multiplied by your level.</li>
-        <li>Every 12 drops = next level, and the clock gets faster. Keep the rhythm.</li>
-        <li>The run ends when the board fills up.</li>
+        <li><b>The goal is survival:</b> the run ends when the mountain fills to the top. Merging keeps it clear — and scores.</li>
+        <li>Tap a <b>▼ lane</b> (or anywhere in a column) to drop the tile there <b>before the clock drops it for you</b> somewhere random.</li>
+        <li>Touching tiles with equal numerals merge upward: I+I&rarr;II &hellip; IX+IX&rarr;X. Two X&rsquo;s vanish in a 💥 for a big bonus.</li>
+        <li>Same-sport merges score <b>double</b>, and every point is multiplied by your level.</li>
+        <li>Every 15 drops = next level — the clock gets a little faster. Keep the rhythm.</li>
       </ul>
     </details>
   </div>
@@ -278,14 +334,16 @@
 </div>
 
 <footer class="om-foot">
-  <p>© 2026 <b>SnowDoku<span style="color:var(--accent)">.com</span></b> · Winter brain games in Roman numerals</p>
-  <p>
-    <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">OPEN MIRROR LLC</a>
-    &nbsp;·&nbsp;
-    <a href="https://openmirrorllc.com/about" target="_blank" rel="noopener noreferrer">ABOUT</a>
-    &nbsp;·&nbsp;
-    <a class="icons" href="https://crossheartpray.com" target="_blank" rel="noopener noreferrer" title="CrossHeartPray">✝️ ❤️ 🙏</a>
-  </p>
+  <div class="om-in">
+    <p>© 2026 <b>SnowDoku<span style="color:var(--accent)">.com</span></b> · Winter brain games in Roman numerals</p>
+    <p>
+      <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">OPEN MIRROR LLC</a>
+      &nbsp;·&nbsp;
+      <a href="https://openmirrorllc.com/about-open-mirror" target="_blank" rel="noopener noreferrer">ABOUT</a>
+      &nbsp;·&nbsp;
+      <a class="icons" href="https://crossheartpray.com" target="_blank" rel="noopener noreferrer" title="CrossHeartPray">✝️ ❤️ 🙏</a>
+    </p>
+  </div>
 </footer>
 
 <script>
@@ -774,7 +832,11 @@
         el.className='cell'+(frozen.has(i)?' frozen':'')+(cellLive.has(i)?' legal':'');
         el.dataset.idx=i;
         if(grid[i]) el.innerHTML=cardHTML(grid[i]);
-        if(lane.has(i)&&suitColor) el.style.boxShadow=`inset 0 0 0 2px ${suitColor}`;
+        if(lane.has(i)&&suitColor){
+          el.style.boxShadow=`inset 0 0 0 2px ${suitColor}`;
+          // ghost preview: see exactly who lands here before you commit
+          if(!grid[i]) el.innerHTML=`<span style="opacity:.38;display:flex;flex-direction:column;align-items:center">${cardHTML(card)}</span>`;
+        }
         el.style.gridRow=gpos(row(i)); el.style.gridColumn=gpos(col(i));
         el.addEventListener('click',()=>{
           if(!c.physics) placeClassic(i);
@@ -818,7 +880,8 @@
     const COLS=5, ROWS=6;
     let grid,queue,score,level,drops,over,tickIv=null,deadline=0,started=false;
     const idx=(r,c)=>r*COLS+c;
-    const dropInterval=()=>Math.max(1800,5000-(level-1)*450);
+    /* gentle for young and old: 8s at level 1, never below 2.5s */
+    const dropInterval=()=>Math.max(2500,8000-(level-1)*500);
     function spawn(){
       const roll=Math.random();
       const v=roll<0.55?0:roll<0.85?1:2;
@@ -828,9 +891,11 @@
       grid=new Array(COLS*ROWS).fill(null);
       queue=[spawn(),spawn()];
       score=0; level=1; drops=0; over=false; started=true;
+      $('avReady').hidden=true;
+      $('avGame').hidden=false;
       render();
       startTimer();
-      $('avHint').textContent='Tap a column to drop — beat the clock!';
+      $('avHint').textContent='Tap a ▼ lane to drop — beat the clock!';
     }
     function startTimer(){
       stopTimer();
@@ -871,6 +936,7 @@
       return null;
     }
     function resolve(){
+      const events=[];
       for(;;){
         gravity();
         const pair=findPair();
@@ -882,15 +948,35 @@
         const drop2=(keep===a)?b:a;
         if(ta.v>=9){
           grid[a]=null; grid[b]=null;
-          score+=500*level;
+          const pts=500*level;
+          score+=pts;
+          events.push({cell:keep,label:`💥 +${pts}`});
         }else{
           const t=grid[keep];
           t.v+=1;
           if(same) t.s=ta.s;
           grid[drop2]=null;
-          score+=(t.v+1)*(t.v+1)*5*(same?2:1)*level;
+          const pts=(t.v+1)*(t.v+1)*5*(same?2:1)*level;
+          score+=pts;
+          events.push({cell:keep,label:`+${pts}${same?' ×2!':''}`});
         }
       }
+      return events;
+    }
+    /* floating +points over the board — see the score happen */
+    function popPoints(events){
+      const wrapEl=$('avBoardWrap');
+      events.slice(0,4).forEach((ev,k)=>{
+        const cellEl=boardEl.children[ev.cell];
+        if(!cellEl) return;
+        const s=document.createElement('span');
+        s.className='pts';
+        s.textContent=ev.label;
+        s.style.left=(cellEl.offsetLeft+boardEl.offsetLeft+2)+'px';
+        s.style.top=(cellEl.offsetTop+boardEl.offsetTop-6-k*4)+'px';
+        wrapEl.appendChild(s);
+        setTimeout(()=>s.remove(),1000);
+      });
     }
     function drop(c,fromClock){
       if(over||!started) return false;
@@ -900,34 +986,46 @@
       grid[idx(r,c)]=queue.shift();
       queue.push(spawn());
       drops++;
-      const nl=1+Math.floor(drops/12);
+      const nl=1+Math.floor(drops/15);
       if(nl>level){
         level=nl;
-        $('avHint').textContent=`⚡ Level ${level} — the clock is faster. Keep the rhythm!`;
+        $('avHint').textContent=`⚡ Level ${level} — the clock is a little faster. Keep the rhythm!`;
       }else if(!fromClock){
-        $('avHint').textContent='Tap a column to drop — beat the clock!';
+        $('avHint').textContent='Tap a ▼ lane to drop — beat the clock!';
       }
-      resolve();
+      const events=resolve();
       deadline=Date.now()+dropInterval();
       let full=true;
       for(let cc=0;cc<COLS;cc++) if(!grid[idx(0,cc)]) full=false;
       render();
+      if(events.length) popPoints(events);
       if(full){
         over=true;
         stopTimer();
         const best=Math.max(score,+(localStorage.getItem('sd_aval_best')||0));
         localStorage.setItem('sd_aval_best',best);
-        overlay('Buried! 🌨️',`Level ${level}, score ${score} — best ${best}.`,
+        overlay('Buried! 🌨️',`The mountain filled up — level ${level}, score ${score}. Best ${best}. Rock and roll, snow style.`,
           [['New run',newRun]]);
       }
       return true;
     }
     const boardEl=$('avBoard');
+    function renderArrows(){
+      const ar=$('avArrows');
+      ar.innerHTML='';
+      for(let c=0;c<COLS;c++){
+        const b=document.createElement('button');
+        b.textContent='▼';
+        b.title=`Drop in lane ${c+1}`;
+        b.addEventListener('click',()=>drop(c));
+        ar.appendChild(b);
+      }
+    }
     function render(){
       boardEl.innerHTML='';
       for(let i=0;i<COLS*ROWS;i++){
         const el=document.createElement('div');
-        el.className='cell';
+        el.className='cell'+((i%COLS)%2===1?' laneB':'');
         if(grid[i]) el.innerHTML=cardHTML(grid[i]);
         el.addEventListener('click',()=>drop(i%COLS));
         boardEl.appendChild(el);
@@ -938,11 +1036,20 @@
       $('avCur').innerHTML=queue[0]?cardHTML(queue[0]):'';
       $('avNext').innerHTML=queue[1]?cardHTML(queue[1]):'';
     }
-    function enter(){ if(!started||over){ if(!started) newRun(); else startTimer(); } else startTimer(); if(over) stopTimer(); }
+    function enter(){
+      if(!started){
+        $('avReady').hidden=false;
+        $('avGame').hidden=true;
+        return;
+      }
+      if(!over) startTimer();
+    }
     function leave(){ stopTimer(); }
+    renderArrows();
     $('avNew').addEventListener('click',newRun);
+    $('avStart').addEventListener('click',newRun);
     return {newRun,drop,resolve,enter,leave,
-      get state(){return {grid,queue,score,level,drops,over};},
+      get state(){return {grid,queue,score,level,drops,over,started};},
       _set(g){grid=g;}};
   })();
 
