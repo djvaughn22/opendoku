@@ -43,7 +43,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{
-    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    margin:0; min-height:100vh; overscroll-behavior-y:contain; background:var(--bg); color:var(--ink);
     font-family:Georgia,'Times New Roman',serif;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -51,7 +51,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   button{
     font-family:inherit; font-size:.92rem; color:var(--ink);
     background:var(--btn); border:1px solid var(--btnbd); border-radius:10px;
-    padding:10px 14px; cursor:pointer;
+    padding:10px 14px; cursor:pointer; touch-action:manipulation;
   }
   button:active{transform:translateY(1px);}
   button:disabled{opacity:.3; cursor:default;}
@@ -116,7 +116,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   .cell{
     aspect-ratio:1; border-radius:8px; background:var(--cell); border:1px solid var(--cellbd);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    user-select:none; cursor:pointer;
+    user-select:none; cursor:pointer; touch-action:manipulation;
   }
   .cell .suit{font-size:1.3rem; line-height:1.15;}
   .cell .num{font-weight:bold; font-size:.92rem; line-height:1;}
@@ -155,7 +155,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   .chip{
     width:44px; height:54px; border-radius:8px; background:var(--cell);
     border:1px solid var(--cellbd); display:flex; flex-direction:column;
-    align-items:center; justify-content:center; cursor:pointer;
+    align-items:center; justify-content:center; cursor:pointer; touch-action:manipulation;
   }
   .chip .suit{font-size:1.2rem; line-height:1.15;}
   .chip .num{font-weight:bold; font-size:.82rem; line-height:1;}
@@ -179,7 +179,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   /* ---- avalanche ---- */
   #avBoardWrap{position:relative;}
   #avArrows{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; margin-bottom:5px;}
-  #avArrows button{padding:7px 0; font-size:1rem; border-radius:8px; color:var(--accent);}
+  #avArrows button{padding:7px 0; min-height:44px; font-size:1rem; border-radius:8px; color:var(--accent); touch-action:manipulation;}
   #avBoard{
     display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px;
     background:var(--panel); border:1px solid var(--border); padding:8px; border-radius:14px;
@@ -203,6 +203,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   #avReady p{margin:0 0 6px; font-size:.92rem; color:var(--dim); line-height:1.55;}
   #avReady ol{margin:10px auto 16px; padding-left:22px; max-width:300px; text-align:left; font-size:.92rem; color:var(--dim); line-height:1.7;}
   #avReady b{color:var(--ink);}
+  .avGoal{margin:4px auto 16px; max-width:320px; padding:10px 14px; border-radius:12px; background:var(--panel); border:1px solid var(--accent); font-size:.9rem; line-height:1.5; color:var(--ink);}
   #avStart{font-size:1.1rem; padding:13px 34px; border-color:var(--accent); color:var(--accent); font-weight:bold; border-radius:50px;}
   .avTop{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:.95rem; color:var(--dim);}
   .avTop b{color:var(--ink);}
@@ -298,6 +299,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
         <li>Touching tiles with the <b>same numeral merge</b> into a bigger one.</li>
         <li>Beat the clock — wait too long and the tile drops itself!</li>
       </ol>
+      <p class="avGoal">🌊 <b>How to win:</b> keep merging so the beach never fills to the top — last as long as you can.</p>
       <button id="avStart">▶ Start the run</button>
       <button id="avContinue" hidden style="margin-left:8px">↩ Continue last run</button>
     </div>
