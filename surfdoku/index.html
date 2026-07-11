@@ -248,7 +248,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
 
 <header class="om-bar">
   <div class="om-in">
-    <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>
+    <a href="/" title="All the OpenDoku games">← OpenDoku</a>
     <span class="right">
       <span class="site">SNOWDOKU.COM</span>
       <button id="sndBtn" title="Sound on / off">🔊</button>
@@ -374,6 +374,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
 <footer class="om-foot">
   <div class="om-in">
     <p>© 2026 <b id="footBrand">OpenDoku<span style="color:var(--accent)">.com</span></b><span id="footTag"> · Beach brain games in Roman numerals</span></p>
+    <p><a href="/">🧩 All games</a> &nbsp;·&nbsp; <a href="/slopedoku/">🏔️ SlopeDoku →</a></p>
     <p>
       <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">OPEN MIRROR LLC</a>
       &nbsp;·&nbsp;
@@ -411,7 +412,8 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
     domain:'opendoku.com',      // one home for the whole series
     tagline:'Beach brain games in Roman numerals',
     sub:'From one easy rule to two puzzles in every tile.',
-    brand:'🌞'
+    brand:'🌞',
+    next:{href:'/slopedoku/',label:'🏔️ SlopeDoku'}
   };
   const SUITS=[
     {id:'ski',  sym:'🏄'},
@@ -526,6 +528,10 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
       row.appendChild(b);
     });
     $('overlay').hidden=false;
+  }
+  function goNext(){
+    if(window.parent!==window) window.open('https://'+GAME.domain+GAME.next.href,'_blank');
+    else location.href=GAME.next.href;
   }
 
   /* ================= FRESH TRACKS ================= */
@@ -786,6 +792,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
                     black:['dblack','Next: 🚩🚩 double red flag']}[level];
         const btns=[['New deal',newDeal]];
         if(next) btns.push([next[1],()=>setLevel(next[0])]);
+        btns.push([GAME.next.label+' →',goNext]);
         overlay(titles[level],'Every card found its place. The sun is still up.',btns);
         return;
       }
@@ -1131,7 +1138,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
         SFX.over(); buzz([60,40,60]);
         overlay(score>prevBest&&prevBest>0?'🏆 New best!':'Wiped out! 🌊',
           `The beach filled up at level ${level}. Score ${score} · best ${best} · longest chain ⚡${bestChain||1}.`,
-          [['New run',newRun]]);
+          [['New run',newRun],[GAME.next.label+' →',goNext]]);
       }else{
         saveAV();
       }
