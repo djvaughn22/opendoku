@@ -16,6 +16,15 @@
   if('serviceWorker' in navigator)
     addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
+<!-- Google tag (gtag.js) — the opendoku.com GA4 property; shared by every game on this domain -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PLCVJ82B8T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-PLCVJ82B8T');
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
+</script>
 <style>
   :root{
     --bg:#0b1220; --panel:#141d2e; --border:#26324c;
@@ -381,6 +390,7 @@ function effOpts(m, lvl) {
 
 function startMode(m, k) {
   mode = m; kind = k; solvedThis = false;
+  gaTrack('level_start', { game: THEME.slug, level_name: m.id + '_' + k });
   level = kind === 'danger' ? 1 : (+(LS.get(m.id + '_lvl')) || 1);
   $('menu').classList.add('hidden'); $('game').classList.remove('hidden');
   $('winBox').classList.add('hidden'); $('overBox').classList.add('hidden');
@@ -535,6 +545,7 @@ function checkWin() {
   LS.set(mode.id + '_lvl', level);
   const wins = (+(LS.get(mode.id + '_wins')) || 0) + 1;
   LS.set(mode.id + '_wins', wins);
+  gaTrack('level_end', { game: THEME.slug, level_name: mode.id + '_' + kind, level: level, success: true });
   render(); // reveal (memory mode)
   const depth = (level - 1) * THEME.depthStep;
   $('winEmoji').textContent = THEME.gem;
@@ -585,6 +596,7 @@ function gameOver() {
   if (dScore > best) LS.set('danger_best', dScore);
   LS.set('danger_bestchain', Math.max(dBestChain, +(LS.get('danger_bestchain')) || 0));
   SFX.over(); buzz([60, 40, 120]);
+  gaTrack('post_score', { game: THEME.slug, level_name: 'danger', score: dScore });
   $('overTitle').textContent = mode.name + '! The roof came down.';
   $('overSub').textContent = 'Score ' + dScore + ' · best chain ×' + dBestChain + (dScore >= best && dScore > 0 ? ' · NEW BEST' : ' · best ' + Math.max(best, dScore));
   $('overBox').classList.remove('hidden');
