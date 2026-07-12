@@ -299,9 +299,11 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
       <ol>
         <li>Tap a <b>▼ lane</b> to drop the falling tile — <b>beat the clock</b>, or it drops in a random lane.</li>
         <li>Touching tiles with the <b>same numeral merge</b> into one bigger tile: I+I→II … IX+IX→X. Two X&rsquo;s = 💥.</li>
-        <li>The clock speeds up <b>every 12 drops</b>. Think fast.</li>
+        <li>Every <b>12 drops the tide rises</b> — a new stage: faster clock, richer tiles, level bonus.</li>
       </ol>
       <p class="avGoal">🏆 <b>Points:</b> bigger merges pay more · same sport = <b>×2</b> · extra merges from one drop chain <b>⚡×2, ×3…</b> · everything × your level.</p>
+      <p class="avGoal" id="avRecords" hidden></p>
+      <div id="avTop5" hidden style="margin:10px auto 14px;max-width:300px;text-align:left;font-size:.85rem;color:var(--dim);line-height:1.6"></div>
       <button id="avStart">▶ Start the run</button>
       <button id="avContinue" hidden style="margin-left:8px">↩ Continue last run</button>
     </div>
@@ -357,7 +359,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
         <li>Tap a <b>▼ lane</b> (or anywhere in a column) to drop the tile there <b>before the clock drops it for you</b> in a random lane.</li>
         <li>Touching tiles with equal numerals merge upward: I+I&rarr;II &hellip; IX+IX&rarr;X. Two X&rsquo;s vanish in a 💥 worth 500 &times; level.</li>
         <li><b>Scoring:</b> bigger merges are worth more. Same-sport merges pay <b>double</b>. Every extra merge set off by one drop is a <b>⚡ chain</b> — the 2nd merge pays &times;2, the 3rd &times;3. Everything is multiplied by your level.</li>
-        <li><b>Every 12 drops = next level</b> — the clock gets faster (6&nbsp;seconds at the start, down to 1.8), and from level 4 rare IV tiles fall. A red lane is one tile from the top — clear it first.</li>
+        <li><b>Every 12 drops = next level</b>, each a stage of the tide: 💧 Ripple &rarr; 🫧 Chop &rarr; 🌊 Swell &rarr; 🌀 Undertow &rarr; 🦈 Shark Water &rarr; 💥 Riptide &rarr; 🌌 Open Ocean. The clock gets faster (6&nbsp;seconds down to 1.8), IV tiles roll in more often from level 4, V breakers from level 6, and every level pays a bonus. A red lane is one tile from the top — clear it first.</li>
       </ul>
       <div style="text-align:center;margin-top:16px"><button id="infoClose">Close</button></div>
     </div>
@@ -979,11 +981,25 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
     const idx=(r,c)=>r*COLS+c;
     /* a thinking-speed game: 6s at level 1, ~0.45s faster per level, floor 1.8s */
     const dropInterval=()=>Math.max(1800,6000-(level-1)*450);
+    /* the tide rises in named stages — every level is a place in the water */
+    const STAGES=[
+      {ico:'💧',name:'Ripple'},{ico:'🫧',name:'Chop'},{ico:'🌊',name:'Swell'},
+      {ico:'🌀',name:'Undertow'},{ico:'🦈',name:'Shark Water'},{ico:'💥',name:'Riptide'}
+    ];
+    const stageFor=l=>l<=STAGES.length?STAGES[l-1]:{ico:'🌌',name:'Open Ocean '+(l-STAGES.length)};
     function spawn(){
+      /* richer tiles as the tide rises: IV ramps up from level 4, V breakers
+         roll in from level 6 — harder to clear, huge to merge */
+      const p4=level>=4?Math.min(.18,.06+(level-4)*.03):0;
+      const p5=level>=6?.08:0;
       const roll=Math.random();
-      let v=roll<0.55?0:roll<0.85?1:2;
-      /* from level 4, rare IV tiles fall — they take real planning to clear */
-      if(level>=4&&Math.random()<0.12) v=3;
+      let v;
+      if(roll<p5) v=4;
+      else if(roll<p5+p4) v=3;
+      else{
+        const r=(roll-p5-p4)/(1-p5-p4);
+        v=r<.55?0:r<.85?1:2;
+      }
       return {v,s:Math.floor(Math.random()*4)};
     }
     function newRun(){
@@ -1111,8 +1127,10 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
       const nl=1+Math.floor(drops/12);
       if(nl>level){
         level=nl;
+        const st=stageFor(level), bonus=(level-1)*100;
+        score+=bonus;
         SFX.lvl(); buzz(20);
-        $('avHint').textContent=`⚡ Level ${level} — the clock is a little faster. Keep the rhythm!`;
+        $('avHint').textContent=`⚡ Level ${level} · ${st.ico} ${st.name} — +${bonus} bonus. Faster clock, richer tiles!`;
       }else if(!fromClock){
         $('avHint').textContent='Tap a ▼ lane to drop — beat the clock!';
       }
@@ -1135,9 +1153,18 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
         const prevBest=+(localStorage.getItem('su_aval_best')||0);
         const best=Math.max(score,prevBest);
         localStorage.setItem('su_aval_best',best);
+        localStorage.setItem('su_aval_lvl',Math.max(level,+(localStorage.getItem('su_aval_lvl')||0)));
+        localStorage.setItem('su_aval_chain',Math.max(bestChain||1,+(localStorage.getItem('su_aval_chain')||0)));
+        /* tide board: top-5 runs on this device */
+        let top=[];
+        try{top=JSON.parse(localStorage.getItem('su_aval_top'))||[];}catch(e){}
+        top.push({s:score,l:level,c:bestChain||1});
+        top.sort((a,b)=>b.s-a.s);
+        localStorage.setItem('su_aval_top',JSON.stringify(top.slice(0,5)));
+        const st=stageFor(level);
         SFX.over(); buzz([60,40,60]);
         overlay(score>prevBest&&prevBest>0?'🏆 New best!':'Wiped out! 🌊',
-          `The beach filled up at level ${level}. Score ${score} · best ${best} · longest chain ⚡${bestChain||1}.`,
+          `The beach filled up at level ${level} — ${st.ico} ${st.name}. Score ${score} · best ${best} · longest chain ⚡${bestChain||1}.`,
           [['New run',newRun],[GAME.next.label+' →',goNext]]);
       }else{
         saveAV();
@@ -1174,7 +1201,9 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
       }
       $('avScore').textContent=score;
       $('avBest').textContent=localStorage.getItem('su_aval_best')||'0';
-      $('avLevel').textContent=level;
+      const stg=stageFor(level);
+      $('avLevel').textContent=level+' '+stg.ico;
+      $('avLevel').title=stg.name;
       $('avCur').innerHTML=queue[0]?cardHTML(queue[0]):'';
       $('avNext').innerHTML=queue[1]?cardHTML(queue[1]):'';
       $('avToLv').textContent=12-(drops%12);
@@ -1185,6 +1214,21 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
         $('avReady').hidden=false;
         $('avGame').hidden=true;
         $('avContinue').hidden=!localStorage.getItem('su_av_save');
+        /* records + tide board */
+        const b=+(localStorage.getItem('su_aval_best')||0);
+        if(b>0){
+          const bl=+(localStorage.getItem('su_aval_lvl')||1);
+          const bs=stageFor(bl);
+          $('avRecords').hidden=false;
+          $('avRecords').innerHTML=`📈 <b>Your records:</b> score ${b} · level ${bl} ${bs.ico} ${bs.name} · chain ⚡${+(localStorage.getItem('su_aval_chain')||1)}`;
+        }
+        let top=[];
+        try{top=JSON.parse(localStorage.getItem('su_aval_top'))||[];}catch(e){}
+        if(top.length){
+          $('avTop5').hidden=false;
+          $('avTop5').innerHTML='<b style="color:var(--ink)">🌊 Best runs on this device</b>'+
+            top.map((r,i)=>`<div>${i+1}. <b style="color:var(--ink)">${r.s}</b> pts · L${r.l} ${stageFor(r.l).ico} · ⚡${r.c}</div>`).join('');
+        }
         return;
       }
       if(!over) startTimer();
@@ -1210,7 +1254,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
   }
   $('resetAll').addEventListener('click',()=>{
     if(!confirm(`Reset ALL ${GAME.productName} progress on this device — saves, bests and summits?`)) return;
-    ['su_ft_save','su_av_save','su_tracks_wins','su_aval_best','su_tracks_level','su_tab','su_seen']
+    ['su_ft_save','su_av_save','su_tracks_wins','su_aval_best','su_aval_lvl','su_aval_chain','su_aval_top','su_tracks_level','su_tab','su_seen']
       .forEach(k=>localStorage.removeItem(k));
     location.reload();
   });
