@@ -1,47 +1,57 @@
-# SlopeDoku — an OpenDoku game (opendoku.com · snowdoku.com)
+# OpenDoku — the puzzle-games family (opendoku.com · snowdoku.com)
 
-Winter brain games in Roman numerals — born as an iDontCry idea, built
-through StepInTheRing.com. One static file, no build step.
+Born as an iDontCry idea, built through StepInTheRing.com. Every game is one
+static file — no build step, works offline, embeds anywhere.
 
-- **Fresh Tracks** — sudoku where every tile is two puzzles at once
-  (numeral + winter sport). Four slopes: 🟢 bunny-hill tutorial,
-  🔵 4×4, ⚫ 9×9 black diamond (nine sports, both sudoku-valid),
-  ⚫⚫ Slopestyle, where athletes ski to their tiles.
-- **Avalanche** — drop-and-merge I→X with sport powers.
+## The games
 
-Source of truth for the game file: `~/WatchedNotWatched/index.html`
-(also embedded at idontcry.com/snowdoku). To update: copy the file here
-and push — Vercel deploys `main`.
+- **⛷️ SlopeDoku** (`/slopedoku/`, snowdoku.com redirects here) — winter brain
+  games in Roman numerals. *Fresh Tracks*: sudoku where every tile is two
+  puzzles (numeral + winter sport), four slopes from 🟢 bunny hill to ⚫⚫
+  double black (two full sudokus at once). *Avalanche*: drop-and-merge I→X
+  against the clock, with named storm stages, richer tiles per level, and a
+  top-5 board.
+- **🌞 SurfDoku** (`/surfdoku/`) — the beach remix: *Low Tide* + *Riptide*
+  (tide stages Ripple→Open Ocean). Same engine, different weather.
+- **⛏️ MineDoku** (`/minedoku/`) — mine the numbers that don't belong; every
+  row and column adds to its target. Four depth tiers with 🔥 heat scaling,
+  🔦 Lantern memory digs, ⚠️ Cave-In chain runs. **First game published by
+  the StepInTheRing Game Engine.**
 
-## Building the next doku (the engine seed pattern)
+## Source of truth — every surface serves from THIS repo
 
-SlopeDoku is the first game of the OpenDoku series, built on the Open Mirror Puzzle Engine. The engine is
-this one file — deliberately: one static file deploys anywhere, embeds
-anywhere, works offline, and has zero dependencies to break.
+Push to `main` → Vercel deploys opendoku.com + snowdoku.com.
+idontcry.com/snowdoku **iframes** `https://opendoku.com/slopedoku/` directly —
+there are no game copies anywhere to sync. Never copy game files into other
+repos; that recreates drift.
 
-To create SuitDoku / DogDoku / BibleDoku / ColorDoku / etc.:
+## Building the next doku
 
-1. Fork `index.html`. Everything themeable sits in the **THEME ZONE** at the
-   top of the script: `GAME` (name, domain, tagline, sub, brand emoji),
-   `SUITS` (tile categories — 9 needed for the 9×9 board), `ROMAN` (glyph
-   track — 10 glyphs: 9 board + 1 merge cap). The hero, title, and bar all
-   render from `GAME`.
-2. Swap the suit color variables in `:root` / `[data-theme="light"]` and the
-   difficulty labels in the how-to copy.
-3. Regenerate `/icons` + `manifest.json` for the new brand.
-4. Everything below the THEME ZONE is theme-agnostic engine: board
-   generators (incl. the base-3 orthogonal 9×9 construction),
-   unique-solution enforcement (`countSolutions`), validators
-   (`conflicts`/`completable`), the strikes system, the 💡 coach,
-   save/resume (`sd_ft_save`/`sd_av_save`), the drop-clock arcade mode,
-   theming, PWA wiring, and embed support.
+Two paths:
+
+1. **The Game Engine (preferred):** `_templates/*.html` are complete,
+   theme-driven games with `__DOKU_THEME__` + `__DOKU_HEAD__` marker blocks.
+   The StepInTheRing Game Engine (stepinthering.com/engines?engine=game)
+   swaps the theme, writes the game folder, inserts a homepage card above the
+   `__DOKU_CARDS_END__` marker in index.html, commits, and pushes — a real
+   deploy. `_templates/sum-mine.html` (MineDoku's engine) is the first
+   template; any new game built with the marker blocks becomes a template.
+2. **Fork by hand:** slopedoku/surfdoku share a THEME ZONE (`GAME`, `SUITS`,
+   `ROMAN`) at the top of the script; everything below is theme-agnostic
+   engine (generators, unique-solution enforcement, validators, strikes,
+   💡 coach, save/resume, drop-clock arcade, theming, PWA, embed support).
+
+**Game doctrine (applies to every doku):** mobile-first always; the board
+always tells the player what to do next (goal line on every deal, live
+guidance when stuck, win/next flow visible without scrolling); one easy rule
+per game, then a named climb; records and high scores on every mode.
 
 ## App-store readiness checklist
 
 - [x] Offline play (service worker)
 - [x] Installable PWA (manifest + icons)
-- [x] Save/resume for both games
-- [x] Unique-solution puzzle generation (blue + black)
+- [x] Save/resume
+- [x] Unique-solution puzzle generation
 - [x] Reset progress
 - [x] Reduced-motion support
 - [x] No paid APIs, no accounts, no analytics
@@ -63,4 +73,5 @@ board) but it is a complete, original game concept of its own: lanes,
 routes, terrain, order-of-play strategy. Working name ideas: TrailDoku /
 LaneDoku. The full implementation lives in this repo's git history
 (pre-Jul-8-2026 index.html: landSki/landBoard/landSkate/movesFor/
-dealWinnable + lane arrows and ghost previews).
+dealWinnable + lane arrows and ghost previews). Natural fit as the next
+Game Engine template once rebuilt with the marker blocks.
