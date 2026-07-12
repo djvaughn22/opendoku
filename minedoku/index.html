@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- __DOKU_HEAD_START__ -->
+<title>MineDoku — mine the numbers that don't belong (an OpenDoku game)</title>
+<meta name="description" content="MineDoku, an OpenDoku game: Mine the numbers that don't belong — every row and column adds to its target. Surface Dig to The Core, plus Lantern memory digs and Cave-In.">
+<meta property="og:title" content="MineDoku — an OpenDoku game">
+<meta property="og:description" content="Mine the numbers that don't belong — every row and column adds to its target. Surface Dig to The Core, plus Lantern memory digs and Cave-In.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1220">
+<!-- __DOKU_HEAD_END__ -->
+<script>
+  if('serviceWorker' in navigator)
+    addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#141d2e; --border:#26324c;
+    --ink:#e8edf5; --dim:#94a3b8; --accent:#7dd3fc;
+    --btn:#1e2f4d; --btnbd:#3a5a80;
+    --good:#4ade80; --bad:#f87171; --lava:#f87171;
+    --cellbg:#1a2438; --minedbg:#0d1322;
+  }
+  [data-theme="light"]{
+    --bg:#fefcf9; --panel:#ffffff; --border:#e4e4e7;
+    --ink:#1c1917; --dim:#57534e; --accent:#0284c7;
+    --btn:#f4f4f5; --btnbd:#d4d4d8;
+    --good:#16a34a; --bad:#dc2626; --lava:#dc2626;
+    --cellbg:#f5f5f4; --minedbg:#e7e5e4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    font-family:Georgia,'Times New Roman',serif;
+    display:flex; flex-direction:column; align-items:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button{font-family:inherit; color:var(--ink); background:var(--btn); border:1px solid var(--btnbd); border-radius:10px; padding:10px 14px; cursor:pointer; font-size:.95rem;}
+  button:disabled{opacity:.45; cursor:default;}
+  .om-bar{width:100%; background:var(--panel); border-bottom:1px solid var(--border); font-family:system-ui,sans-serif;}
+  .om-in{max-width:960px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .om-bar a{font-weight:800; font-size:.95rem; color:var(--ink); text-decoration:none;}
+  .om-bar .right{display:flex; align-items:center; gap:8px;}
+  .om-bar .site{font-size:.7rem; font-weight:900; letter-spacing:.18em; color:var(--dim);}
+  .roundbtn{border-radius:50%; width:36px; height:36px; padding:0; font-size:1rem;}
+  .app{width:100%; max-width:430px; padding:14px 12px 48px; margin:0 auto;}
+  .hero{text-align:center; padding:20px 0 8px;}
+  .brand{width:70px; height:70px; margin:0 auto 10px; border-radius:22px; background:var(--panel); border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:2.3rem;}
+  h1{font-size:2rem; margin:0;}
+  h1 span{color:var(--accent);}
+  .series{margin:5px 0 0; font-size:.7rem; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); font-family:system-ui,sans-serif;}
+  .tag{margin:8px 0 0; font-size:.95rem; font-weight:bold; color:var(--accent);}
+  .sub{margin:5px 0 0; font-size:.82rem; color:var(--dim); font-style:italic;}
+  .card{display:block; width:100%; text-align:left; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:15px; margin-top:12px; color:var(--ink);}
+  .card:hover{border-color:var(--accent);}
+  .card .row{display:flex; align-items:center; gap:13px;}
+  .card .ico{font-size:1.9rem; flex-shrink:0;}
+  .card h2{margin:0; font-size:1.1rem;}
+  .card p{margin:3px 0 0; font-size:.8rem; color:var(--dim); line-height:1.45;}
+  .card .go{margin-left:auto; color:var(--accent); font-weight:bold; font-size:1.15rem; flex-shrink:0;}
+  .card .stat{font-size:.72rem; color:var(--accent); font-weight:bold; font-family:system-ui,sans-serif; margin-top:4px;}
+  .howto{border-style:dashed; font-size:.83rem; color:var(--dim); line-height:1.6;}
+  .howto b{color:var(--ink);}
+  /* ---- game screen ---- */
+  .topline{display:flex; align-items:center; justify-content:space-between; gap:8px; margin:10px 0 4px; font-family:system-ui,sans-serif;}
+  .topline .mode{font-weight:900; font-size:1rem;}
+  .topline .meta{font-size:.78rem; color:var(--dim); font-weight:700;}
+  .boardwrap{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:12px; margin-top:8px;}
+  table.board{border-collapse:separate; border-spacing:5px; margin:0 auto; font-family:system-ui,sans-serif;}
+  td.cell{background:var(--cellbg); border:2px solid var(--border); border-radius:10px; text-align:center; font-weight:900; cursor:pointer; user-select:none; position:relative; transition:background .12s,border-color .12s,opacity .12s;}
+  td.cell.mined{background:var(--minedbg); border-style:dashed; opacity:.55;}
+  td.cell.mined .v{text-decoration:line-through; color:var(--dim);}
+  td.cell.gem{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  td.cell.hintflash{animation:hf .8s;}
+  @keyframes hf{0%,100%{box-shadow:none}40%{box-shadow:0 0 0 3px var(--good)}}
+  td.cell .v.neg{color:var(--lava);}
+  td.tgt{font-size:.8rem; font-weight:900; color:var(--dim); text-align:center; min-width:34px;}
+  td.tgt.ok{color:var(--good);}
+  td.tgt.over{color:var(--bad);}
+  td.tgt .cur{display:block; font-size:.62rem; font-weight:700; opacity:.8;}
+  .toolrow{display:flex; gap:8px; margin-top:10px; font-family:system-ui,sans-serif;}
+  .toolrow button{flex:1; font-size:.85rem; padding:9px 6px;}
+  .banner{margin-top:10px; text-align:center; font-family:system-ui,sans-serif; font-size:.85rem; color:var(--dim); min-height:1.2em;}
+  .winbox{background:var(--panel); border:2px solid var(--good); border-radius:16px; padding:18px; margin-top:12px; text-align:center; font-family:system-ui,sans-serif;}
+  .winbox .big{font-size:2rem;}
+  .winbox h3{margin:6px 0 2px; font-size:1.15rem;}
+  .winbox p{margin:4px 0 10px; font-size:.85rem; color:var(--dim);}
+  .meterwrap{background:var(--minedbg); border:1px solid var(--border); border-radius:8px; height:16px; overflow:hidden; margin-top:8px;}
+  .meter{height:100%; background:var(--accent); transition:width .25s linear;}
+  .meter.low{background:var(--bad);}
+  .dangertop{display:flex; justify-content:space-between; font-family:system-ui,sans-serif; font-size:.82rem; font-weight:800; margin-top:8px;}
+  .studyring{font-family:system-ui,sans-serif; font-weight:900; color:var(--accent); text-align:center; font-size:.95rem; margin-top:8px;}
+  .om-foot{width:100%; margin-top:auto; background:var(--panel); border-top:1px solid var(--border); font-family:system-ui,sans-serif; font-size:.8rem; color:var(--dim);}
+  .om-foot .om-in{display:block; text-align:center; padding:24px 18px 28px;}
+  .om-foot a{text-decoration:none; font-weight:900; color:var(--dim);}
+  .om-foot p{margin:5px 0;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body data-theme="dark">
+
+<header class="om-bar">
+  <div class="om-in">
+    <a href="/">← OpenDoku.com</a>
+    <span class="right">
+      <span class="site" id="siteLabel"></span>
+      <button id="sndBtn" class="roundbtn" title="Sound on / off">🔊</button>
+      <button id="themeBtn" class="roundbtn" title="Light / dark">🌙</button>
+    </span>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ================= MENU ================= -->
+  <div id="menu">
+    <div class="hero">
+      <div class="brand" id="brandIco" aria-hidden="true"></div>
+      <h1 id="titleH1"></h1>
+      <p class="series" id="seriesLine"></p>
+      <p class="tag" id="tagLine"></p>
+      <p class="sub" id="subLine"></p>
+    </div>
+    <div id="tierCards"></div>
+    <div class="card howto">
+      <b>How to dig:</b> every row and column shows the sum its kept numbers must reach.
+      Tap a number once to <b>mine it away</b>, again to <b>mark it a keeper</b>, again to clear.
+      When every row and column hits its target exactly — the wall is clear. 💎
+    </div>
+  </div>
+
+  <!-- ================= GAME ================= -->
+  <div id="game" class="hidden">
+    <div class="topline">
+      <button id="backBtn" style="padding:7px 12px; font-size:.85rem;">← Menu</button>
+      <span class="mode" id="modeName"></span>
+      <span class="meta" id="modeMeta"></span>
+    </div>
+    <div id="dangerHud" class="hidden">
+      <div class="dangertop"><span id="dScore">Score 0</span><span id="dChain">Chain ×1</span></div>
+      <div class="meterwrap"><div class="meter" id="dMeter" style="width:100%"></div></div>
+    </div>
+    <div id="studyHud" class="studyring hidden"></div>
+    <div class="boardwrap"><table class="board" id="board"></table></div>
+    <div class="toolrow" id="toolRow">
+      <button id="hintBtn"></button>
+      <button id="peekBtn" class="hidden"></button>
+      <button id="resetBtn">Reset</button>
+    </div>
+    <div class="banner" id="banner"></div>
+    <div id="winBox" class="winbox hidden">
+      <div class="big" id="winEmoji"></div>
+      <h3 id="winTitle"></h3>
+      <p id="winSub"></p>
+      <button id="nextBtn" style="border-color:var(--accent); font-weight:900;"></button>
+    </div>
+    <div id="overBox" class="winbox hidden" style="border-color:var(--bad);">
+      <div class="big">⚠️</div>
+      <h3 id="overTitle"></h3>
+      <p id="overSub"></p>
+      <button id="againBtn" style="border-color:var(--accent); font-weight:900;">Dig again</button>
+    </div>
+  </div>
+
+</div>
+
+<footer class="om-foot">
+  <div class="om-in">
+    <p id="footLine"></p>
+    <p>
+      <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">OPEN MIRROR LLC</a>
+      &nbsp;·&nbsp;
+      <a href="https://openmirrorllc.com/about-open-mirror" target="_blank" rel="noopener noreferrer">ABOUT</a>
+      &nbsp;·&nbsp;
+      <a href="https://crossheartpray.com" target="_blank" rel="noopener noreferrer" title="CrossHeartPray">✝️ ❤️ 🙏</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// ============================================================================
+// THEME — everything world-specific lives in this one block. The StepInTheRing
+// Game Engine swaps this JSON (and the __DOKU_HEAD__ block above) to publish a
+// brand-new doku from this same template. Game logic below never hard-codes
+// world words, colors, or storage keys.
+// ============================================================================
+const THEME = /*__DOKU_THEME_START__*/{
+  "slug": "minedoku",
+  "name": "MineDoku",
+  "emoji": "⛏️",
+  "gem": "💎",
+  "tagline": "Mine the numbers that don't belong.",
+  "sub": "Keep the gems. Every row and column adds to its target.",
+  "cardBlurb": "Mine the numbers that don't belong — every row and column adds to its target. Surface Dig to The Core, plus Lantern memory digs and Cave-In.",
+  "accentDark": "#fbbf24",
+  "accentLight": "#b45309",
+  "storagePrefix": "mdk",
+  "depthStep": 10,
+  "depthUnit": "m",
+  "depthWord": "Depth",
+  "winWord": "Wall clear!",
+  "tiers": [
+    {
+      "id": "surface",
+      "name": "Surface Dig",
+      "emoji": "🕯️",
+      "blurb": "3×3 · gentle digs to learn the rule",
+      "size": 3,
+      "lo": 1,
+      "hi": 9,
+      "negCount": 0,
+      "mineMin": 1,
+      "mineMax": 1
+    },
+    {
+      "id": "shaft",
+      "name": "Deep Shaft",
+      "emoji": "⛏️",
+      "blurb": "4×4 · the real digging starts",
+      "size": 4,
+      "lo": 1,
+      "hi": 9,
+      "negCount": 0,
+      "mineMin": 1,
+      "mineMax": 2
+    },
+    {
+      "id": "vein",
+      "name": "Diamond Vein",
+      "emoji": "💎",
+      "blurb": "5×5 · big walls, big sums",
+      "size": 5,
+      "lo": 1,
+      "hi": 9,
+      "negCount": 0,
+      "mineMin": 1,
+      "mineMax": 3
+    },
+    {
+      "id": "core",
+      "name": "The Core",
+      "emoji": "🌋",
+      "blurb": "6×6 · lava numbers count against you",
+      "size": 6,
+      "lo": 1,
+      "hi": 12,
+      "negCount": 4,
+      "mineMin": 2,
+      "mineMax": 3
+    }
+  ],
+  "memory": {
+    "id": "lantern",
+    "name": "Lantern",
+    "emoji": "🔦",
+    "blurb": "Memorize the wall before the light goes out — mining reveals, keeping trusts your memory",
+    "size": 4,
+    "lo": 1,
+    "hi": 9,
+    "negCount": 0,
+    "mineMin": 1,
+    "mineMax": 2,
+    "studySeconds": 6,
+    "peeks": 3,
+    "peekSeconds": 1.5
+  },
+  "danger": {
+    "id": "cavein",
+    "name": "Cave-In",
+    "emoji": "⚠️",
+    "blurb": "Endless quick digs before the roof comes down — chain fast solves to score big",
+    "size": 3,
+    "lo": 1,
+    "hi": 9,
+    "negCount": 0,
+    "mineMin": 1,
+    "mineMax": 1,
+    "drainBase": 4,
+    "drainPerSolve": 0.35,
+    "refill": 35,
+    "chainSeconds": 12
+  }
+}/*__DOKU_THEME_END__*/;
+
+// ============================================================================
+// Shared plumbing (same conventions as the rest of the OpenDoku family)
+// ============================================================================
+const P = THEME.storagePrefix;
+const $ = id => document.getElementById(id);
+const LS = {
+  get: k => localStorage.getItem(P + '_' + k),
+  set: (k, v) => { try { localStorage.setItem(P + '_' + k, v); } catch (e) {} },
+};
+const buzz = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+
+// -- sound (tiny WebAudio blips, toggleable) --
+const SFX = (() => {
+  let ctx = null, on = LS.get('snd') !== 'off';
+  function tone(f, d, type, vol) {
+    if (!on) return;
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(vol || .12, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + d);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + d);
+    } catch (e) {}
+  }
+  return {
+    tap: () => tone(340, .06, 'square', .06),
+    mine: () => tone(180, .09, 'square', .1),
+    gem: () => tone(660, .08, 'sine', .1),
+    line: () => tone(520, .12, 'sine', .12),
+    win: () => { tone(523, .12); setTimeout(() => tone(659, .12), 110); setTimeout(() => tone(784, .2), 220); },
+    over: () => { tone(220, .25, 'sawtooth', .1); setTimeout(() => tone(150, .35, 'sawtooth', .1), 200); },
+    isOn: () => on,
+    toggle() { on = !on; LS.set('snd', on ? 'on' : 'off'); return on; },
+  };
+})();
+
+// -- theme (follows the family om-theme key) --
+function applyTheme(t) {
+  document.body.dataset.theme = t;
+  document.documentElement.dataset.omTheme = t;
+  document.documentElement.style.setProperty('--accent', t === 'light' ? THEME.accentLight : THEME.accentDark);
+  $('themeBtn').textContent = t === 'dark' ? '🌙' : '☀️';
+}
+applyTheme(localStorage.getItem('om-theme') === 'light' ? 'light' : 'dark');
+$('themeBtn').onclick = () => {
+  const t = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('om-theme', t); applyTheme(t);
+};
+$('sndBtn').textContent = SFX.isOn() ? '🔊' : '🔇';
+$('sndBtn').onclick = () => { $('sndBtn').textContent = SFX.toggle() ? '🔊' : '🔇'; };
+
+// ============================================================================
+// Puzzle core — seeded generation with a guaranteed UNIQUE solution.
+// Rule: mine cells so every row & column of kept numbers sums to its target.
+// ============================================================================
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hashSeed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function countSolutions(n, vals, rowT, colT, limit) {
+  const rowMasks = [];
+  for (let r = 0; r < n; r++) {
+    const list = [];
+    for (let m = 0; m < (1 << n); m++) {
+      let s = 0; for (let c = 0; c < n; c++) if (m & (1 << c)) s += vals[r * n + c];
+      if (s === rowT[r]) list.push(m);
+    }
+    if (!list.length) return 0;
+    rowMasks.push(list);
+  }
+  const posRem = [], negRem = [];
+  for (let r = n; r >= 0; r--) {
+    posRem[r] = new Array(n).fill(0); negRem[r] = new Array(n).fill(0);
+    if (r < n) for (let c = 0; c < n; c++) {
+      const v = vals[r * n + c];
+      posRem[r][c] = posRem[r + 1][c] + (v > 0 ? v : 0);
+      negRem[r][c] = negRem[r + 1][c] + (v < 0 ? v : 0);
+    }
+  }
+  let count = 0;
+  const colSum = new Array(n).fill(0);
+  (function dfs(r) {
+    if (count >= limit) return;
+    if (r === n) {
+      for (let c = 0; c < n; c++) if (colSum[c] !== colT[c]) return;
+      count++; return;
+    }
+    for (let c = 0; c < n; c++) {
+      if (colSum[c] + posRem[r][c] < colT[c]) return;
+      if (colSum[c] + negRem[r][c] > colT[c]) return;
+    }
+    for (const m of rowMasks[r]) {
+      for (let c = 0; c < n; c++) if (m & (1 << c)) colSum[c] += vals[r * n + c];
+      dfs(r + 1);
+      for (let c = 0; c < n; c++) if (m & (1 << c)) colSum[c] -= vals[r * n + c];
+      if (count >= limit) return;
+    }
+  })(0);
+  return count;
+}
+
+function generate(opts, seedStr) {
+  const n = opts.size;
+  for (let attempt = 0; attempt < 400; attempt++) {
+    const rnd = mulberry32(hashSeed(seedStr + ':' + attempt));
+    const pick = (lo, hi) => lo + Math.floor(rnd() * (hi - lo + 1));
+    const vals = new Array(n * n);
+    for (let i = 0; i < n * n; i++) { let v = pick(opts.lo, opts.hi); if (v === 0) v = 1; vals[i] = v; }
+    if (opts.negCount) {
+      const idx = [...Array(n * n).keys()];
+      for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1));[idx[i], idx[j]] = [idx[j], idx[i]]; }
+      for (let k = 0; k < opts.negCount; k++) vals[idx[k]] = -pick(1, 9);
+    }
+    const mined = new Array(n * n).fill(false);
+    for (let r = 0; r < n; r++) {
+      const count = pick(opts.mineMin, opts.mineMax);
+      const cols = [...Array(n).keys()];
+      for (let i = cols.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1));[cols[i], cols[j]] = [cols[j], cols[i]]; }
+      for (let k = 0; k < count; k++) mined[r * n + cols[k]] = true;
+    }
+    let ok = true;
+    for (let c = 0; c < n; c++) { let keep = 0; for (let r = 0; r < n; r++) if (!mined[r * n + c]) keep++; if (!keep) { ok = false; break; } }
+    if (!ok) continue;
+    const rowT = new Array(n).fill(0), colT = new Array(n).fill(0);
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!mined[r * n + c]) { rowT[r] += vals[r * n + c]; colT[c] += vals[r * n + c]; }
+    if (countSolutions(n, vals, rowT, colT, 2) === 1) return { n, vals, rowT, colT, solution: mined };
+  }
+  return null;
+}
+
+// ============================================================================
+// Game state + rendering
+// ============================================================================
+// cell states: 0 = keep (default), 1 = mined, 2 = gem-marked keep
+let mode = null;      // current tier / memory / danger config
+let kind = 'tier';    // 'tier' | 'memory' | 'danger'
+let puz = null, states = [], level = 1, hints = 3, solvedThis = false;
+// memory-mode state
+let memPhase = 'study', peeksLeft = 0, memTimer = null;
+// danger-mode state
+let dMeter = 100, dScore = 0, dChain = 1, dSolves = 0, dBestChain = 1, dTick = null, dLastSolve = 0;
+
+const cellPx = n => n <= 3 ? 64 : n === 4 ? 58 : n === 5 ? 50 : 44;
+
+function seedFor(id, lvl) { return THEME.slug + ':' + id + ':' + lvl; }
+
+function startMode(m, k) {
+  mode = m; kind = k; solvedThis = false;
+  level = kind === 'danger' ? 1 : (+(LS.get(m.id + '_lvl')) || 1);
+  $('menu').classList.add('hidden'); $('game').classList.remove('hidden');
+  $('winBox').classList.add('hidden'); $('overBox').classList.add('hidden');
+  $('dangerHud').classList.toggle('hidden', kind !== 'danger');
+  $('peekBtn').classList.toggle('hidden', kind !== 'memory');
+  if (kind === 'danger') { dMeter = 100; dScore = 0; dChain = 1; dSolves = 0; dBestChain = 1; dLastSolve = Date.now(); startDrain(); }
+  newPuzzle();
+}
+
+function newPuzzle() {
+  puz = generate(mode, seedFor(mode.id, level));
+  if (!puz) { $('banner').textContent = 'The wall collapsed — try the next dig.'; level++; puz = generate(mode, seedFor(mode.id, level)); }
+  states = new Array(puz.n * puz.n).fill(0);
+  hints = 3; solvedThis = false;
+  $('winBox').classList.add('hidden'); $('overBox').classList.add('hidden');
+  $('banner').textContent = '';
+  $('modeName').textContent = mode.emoji + ' ' + mode.name;
+  updateMeta();
+  if (kind === 'memory') startStudy(); else { memPhase = 'play'; $('studyHud').classList.add('hidden'); }
+  render();
+}
+
+function updateMeta() {
+  if (kind === 'danger') { $('modeMeta').textContent = 'Dig ' + level; return; }
+  const depth = (level - 1) * THEME.depthStep;
+  $('modeMeta').textContent = THEME.depthWord + ' ' + depth + THEME.depthUnit + ' · Dig ' + level;
+}
+
+function startStudy() {
+  memPhase = 'study'; peeksLeft = mode.peeks;
+  let left = mode.studySeconds;
+  $('studyHud').classList.remove('hidden');
+  $('studyHud').textContent = mode.emoji + ' Study the wall… ' + left;
+  clearInterval(memTimer);
+  memTimer = setInterval(() => {
+    left--;
+    if (left <= 0) { clearInterval(memTimer); memPhase = 'play'; $('studyHud').textContent = mode.emoji + ' Lights out. Dig from memory.'; render(); updateTools(); }
+    else $('studyHud').textContent = mode.emoji + ' Study the wall… ' + left;
+  }, 1000);
+  updateTools();
+}
+
+function peek() {
+  if (peeksLeft <= 0 || memPhase !== 'play') return;
+  peeksLeft--; memPhase = 'peek'; SFX.gem(); render(); updateTools();
+  setTimeout(() => { if (memPhase === 'peek') { memPhase = 'play'; render(); updateTools(); } }, mode.peekSeconds * 1000);
+}
+
+function cellVisible(i) {
+  if (kind !== 'memory') return true;
+  if (memPhase === 'study' || memPhase === 'peek' || solvedThis) return true;
+  return states[i] === 1; // mining reveals what you dug out
+}
+
+function render() {
+  const n = puz.n, px = cellPx(n), tb = $('board');
+  let html = '';
+  for (let r = 0; r < n; r++) {
+    html += '<tr>';
+    for (let c = 0; c < n; c++) {
+      const i = r * n + c, v = puz.vals[i], st = states[i];
+      const cls = 'cell' + (st === 1 ? ' mined' : '') + (st === 2 ? ' gem' : '');
+      const shown = cellVisible(i) ? '<span class="v' + (v < 0 ? ' neg' : '') + '">' + v + '</span>' : '<span class="v" style="opacity:.5">?</span>';
+      const gemMark = st === 2 ? '<span style="position:absolute;top:1px;right:3px;font-size:.55rem;">' + THEME.gem + '</span>' : '';
+      html += '<td class="' + cls + '" data-i="' + i + '" style="width:' + px + 'px;height:' + px + 'px;font-size:' + (px * .38) + 'px;">' + shown + gemMark + '</td>';
+    }
+    html += rowChip(r) + '</tr>';
+  }
+  html += '<tr>';
+  for (let c = 0; c < n; c++) html += colChip(c);
+  html += '<td></td></tr>';
+  tb.innerHTML = html;
+  tb.querySelectorAll('td.cell').forEach(td => td.addEventListener('click', () => tapCell(+td.dataset.i)));
+  updateTools();
+}
+
+function keptSum(line, idx) {
+  const n = puz.n; let s = 0;
+  for (let k = 0; k < n; k++) {
+    const i = line === 'r' ? idx * n + k : k * n + idx;
+    if (states[i] !== 1) s += puz.vals[i];
+  }
+  return s;
+}
+function chipHtml(target, cur, hasNeg) {
+  const ok = cur === target;
+  const over = !hasNeg && cur < target; // all-positive: below target = over-mined
+  const cls = 'tgt' + (ok ? ' ok' : over ? ' over' : '');
+  return '<td class="' + cls + '">' + target + (ok ? ' ✓' : '<span class="cur">' + cur + '</span>') + '</td>';
+}
+function lineHasNeg(line, idx) {
+  const n = puz.n;
+  for (let k = 0; k < n; k++) { const i = line === 'r' ? idx * n + k : k * n + idx; if (puz.vals[i] < 0) return true; }
+  return false;
+}
+function rowChip(r) { return chipHtml(puz.rowT[r], keptSum('r', r), lineHasNeg('r', r)); }
+function colChip(c) { return chipHtml(puz.colT[c], keptSum('c', c), lineHasNeg('c', c)); }
+
+function tapCell(i) {
+  if (solvedThis) return;
+  if (kind === 'memory' && memPhase === 'study') return;
+  states[i] = (states[i] + 1) % 3;
+  if (states[i] === 1) { SFX.mine(); buzz(12); } else if (states[i] === 2) { SFX.gem(); } else SFX.tap();
+  render();
+  checkWin();
+}
+
+function isSolved() {
+  const n = puz.n;
+  for (let r = 0; r < n; r++) if (keptSum('r', r) !== puz.rowT[r]) return false;
+  for (let c = 0; c < n; c++) if (keptSum('c', c) !== puz.colT[c]) return false;
+  return true;
+}
+
+function checkWin() {
+  if (!isSolved()) return;
+  solvedThis = true;
+  SFX.win(); buzz([20, 40, 60]);
+  if (kind === 'danger') return dangerSolve();
+  clearInterval(memTimer); $('studyHud').classList.add('hidden');
+  level++;
+  LS.set(mode.id + '_lvl', level);
+  const wins = (+(LS.get(mode.id + '_wins')) || 0) + 1;
+  LS.set(mode.id + '_wins', wins);
+  render(); // reveal (memory mode)
+  const depth = (level - 1) * THEME.depthStep;
+  $('winEmoji').textContent = THEME.gem;
+  $('winTitle').textContent = THEME.winWord;
+  $('winSub').textContent = THEME.depthWord + ' reached: ' + depth + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins + ' on ' + mode.name;
+  $('nextBtn').textContent = '⛏ Next dig — ' + depth + THEME.depthUnit;
+  $('winBox').classList.remove('hidden');
+  updateMeta();
+}
+
+// ---- danger mode (Cave-In) ----
+function startDrain() {
+  clearInterval(dTick);
+  dTick = setInterval(() => {
+    if (solvedThis) return;
+    dMeter -= (mode.drainBase + mode.drainPerSolve * dSolves) / 4;
+    if (dMeter <= 0) { dMeter = 0; gameOver(); }
+    drawDanger();
+  }, 250);
+}
+function drawDanger() {
+  const m = $('dMeter');
+  m.style.width = Math.max(0, dMeter) + '%';
+  m.classList.toggle('low', dMeter < 30);
+  $('dScore').textContent = 'Score ' + dScore;
+  $('dChain').textContent = 'Chain ×' + dChain;
+}
+function dangerSolve() {
+  const fast = dSolves > 0 && (Date.now() - dLastSolve) / 1000 <= mode.chainSeconds;
+  dChain = fast ? dChain + 1 : 1;
+  dBestChain = Math.max(dBestChain, dChain);
+  dScore += 10 * dChain;
+  dSolves++; dLastSolve = Date.now();
+  dMeter = Math.min(100, dMeter + mode.refill);
+  SFX.line();
+  drawDanger();
+  level++;
+  setTimeout(() => { if (kind === 'danger' && dMeter > 0) newPuzzle(); }, 350);
+}
+function gameOver() {
+  clearInterval(dTick);
+  solvedThis = true;
+  const best = +(LS.get('danger_best')) || 0;
+  if (dScore > best) LS.set('danger_best', dScore);
+  LS.set('danger_bestchain', Math.max(dBestChain, +(LS.get('danger_bestchain')) || 0));
+  SFX.over(); buzz([60, 40, 120]);
+  $('overTitle').textContent = mode.name + '! The roof came down.';
+  $('overSub').textContent = 'Score ' + dScore + ' · best chain ×' + dBestChain + (dScore >= best && dScore > 0 ? ' · NEW BEST' : ' · best ' + Math.max(best, dScore));
+  $('overBox').classList.remove('hidden');
+}
+
+// ---- tools ----
+function updateTools() {
+  $('hintBtn').textContent = '💡 Hint (' + hints + ')';
+  $('hintBtn').disabled = hints <= 0 || solvedThis || (kind === 'memory' && memPhase !== 'play');
+  $('peekBtn').textContent = '👁 Peek (' + peeksLeft + ')';
+  $('peekBtn').disabled = peeksLeft <= 0 || memPhase !== 'play' || solvedThis;
+}
+$('hintBtn').onclick = () => {
+  if (hints <= 0 || solvedThis) return;
+  const n = puz.n, wrong = [];
+  for (let i = 0; i < n * n; i++) {
+    const shouldMine = puz.solution[i];
+    const isMined = states[i] === 1;
+    if (shouldMine !== isMined) wrong.push(i);
+  }
+  if (!wrong.length) { $('banner').textContent = 'Every dig so far is right — keep going.'; return; }
+  const i = wrong[Math.floor(Math.random() * wrong.length)];
+  states[i] = puz.solution[i] ? 1 : 2;
+  hints--; SFX.gem();
+  render();
+  const td = $('board').querySelector('td[data-i="' + i + '"]');
+  if (td) td.classList.add('hintflash');
+  checkWin();
+};
+$('peekBtn').onclick = peek;
+$('resetBtn').onclick = () => { if (solvedThis) return; states.fill(0); $('banner').textContent = ''; render(); };
+$('nextBtn').onclick = () => newPuzzle();
+$('againBtn').onclick = () => startMode(mode, 'danger');
+$('backBtn').onclick = () => {
+  clearInterval(dTick); clearInterval(memTimer);
+  $('game').classList.add('hidden'); $('menu').classList.remove('hidden');
+  buildMenu();
+};
+
+// ============================================================================
+// Menu (built from THEME)
+// ============================================================================
+function statLine(m, k) {
+  if (k === 'danger') {
+    const best = LS.get('danger_best');
+    return best ? 'Best score ' + best + ' · best chain ×' + (LS.get('danger_bestchain') || 1) : 'No runs yet';
+  }
+  const lvl = +(LS.get(m.id + '_lvl')) || 1;
+  const wins = LS.get(m.id + '_wins') || 0;
+  return lvl > 1 ? THEME.depthWord + ' ' + ((lvl - 1) * THEME.depthStep) + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins : 'Not dug yet';
+}
+function buildMenu() {
+  const host = $('tierCards');
+  let html = '';
+  const card = (m, k) =>
+    '<button class="card" data-mode="' + m.id + '" data-kind="' + k + '"><span class="row">' +
+    '<span class="ico">' + m.emoji + '</span><span style="flex:1;text-align:left;">' +
+    '<h2>' + m.name + '</h2><p>' + m.blurb + '</p><span class="stat">' + statLine(m, k) + '</span>' +
+    '</span><span class="go">→</span></span></button>';
+  for (const t of THEME.tiers) html += card(t, 'tier');
+  html += card(THEME.memory, 'memory');
+  html += card(THEME.danger, 'danger');
+  host.innerHTML = html;
+  host.querySelectorAll('button.card').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.kind;
+    const m = k === 'memory' ? THEME.memory : k === 'danger' ? THEME.danger : THEME.tiers.find(t => t.id === b.dataset.mode);
+    SFX.tap(); startMode(m, k);
+  }));
+}
+
+// ---- boot ----
+$('siteLabel').textContent = THEME.name.toUpperCase();
+$('brandIco').textContent = THEME.emoji;
+const nm = THEME.name;
+$('titleH1').innerHTML = nm.slice(0, -4) + '<span>' + nm.slice(-4) + '</span>'; // color the "Doku"
+$('seriesLine').textContent = 'An OpenDoku game — Open Mirror LLC';
+$('tagLine').textContent = THEME.tagline;
+$('subLine').textContent = THEME.sub;
+$('footLine').innerHTML = '© 2026 <b>' + THEME.name + '</b> · an <a href="/" style="color:var(--accent)">OpenDoku.com</a> game · Open Mirror LLC';
+buildMenu();
+</script>
+</body>
+</html>

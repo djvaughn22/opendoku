@@ -1,0 +1,19 @@
+{
+  "name": "MineDoku — an OpenDoku game",
+  "short_name": "MineDoku",
+  "description": "Mine the numbers that don't belong — every row and column adds to its target. Surface Dig to The Core, plus Lantern memory digs and Cave-In.",
+  "start_url": "/minedoku/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "/minedoku/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "scope": "/minedoku/"
+}
