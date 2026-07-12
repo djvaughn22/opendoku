@@ -129,6 +129,7 @@
       <b>How to dig:</b> every row and column shows the sum its kept numbers must reach.
       Tap a number once to <b>mine it away</b>, again to <b>mark it a keeper</b>, again to clear.
       When every row and column hits its target exactly — the wall is clear. 💎
+      Every five digs the wall gets hotter: bigger numbers, more to mine.
     </div>
   </div>
 
@@ -349,6 +350,7 @@ function generate(opts, seedStr) {
 let mode = null;      // current tier / memory / danger config
 let kind = 'tier';    // 'tier' | 'memory' | 'danger'
 let puz = null, states = [], level = 1, hints = 3, solvedThis = false;
+let curOpts = null, digStart = 0;
 // memory-mode state
 let memPhase = 'study', peeksLeft = 0, memTimer = null;
 // danger-mode state
@@ -358,6 +360,24 @@ const cellPx = n => n <= 3 ? 64 : n === 4 ? 58 : n === 5 ? 50 : 44;
 
 function seedFor(id, lvl) { return THEME.slug + ':' + id + ':' + lvl; }
 
+// The wall gets harder as you go deeper: every 5 digs adds heat — bigger
+// numbers, more junk to mine, shorter memory light — bounded by the grid.
+// Deterministic per level, so progress always means the same puzzle.
+function heatFor(lvl) { return Math.floor((lvl - 1) / 5); }
+function effOpts(m, lvl) {
+  const d = heatFor(lvl), n = m.size;
+  const mineMax = Math.min(n - 1, m.mineMax + Math.floor((d + 1) / 2));
+  return {
+    size: n,
+    lo: m.lo,
+    hi: Math.min(20, m.hi + d),
+    negCount: m.negCount ? Math.min(n * 2, m.negCount + Math.floor(d / 2)) : 0,
+    mineMin: Math.min(mineMax, m.mineMin + Math.floor(d / 3)),
+    mineMax,
+    studySeconds: m.studySeconds ? Math.max(3, m.studySeconds - Math.floor(d / 2)) : 0,
+  };
+}
+
 function startMode(m, k) {
   mode = m; kind = k; solvedThis = false;
   level = kind === 'danger' ? 1 : (+(LS.get(m.id + '_lvl')) || 1);
@@ -365,15 +385,16 @@ function startMode(m, k) {
   $('winBox').classList.add('hidden'); $('overBox').classList.add('hidden');
   $('dangerHud').classList.toggle('hidden', kind !== 'danger');
   $('peekBtn').classList.toggle('hidden', kind !== 'memory');
-  if (kind === 'danger') { dMeter = 100; dScore = 0; dChain = 1; dSolves = 0; dBestChain = 1; dLastSolve = Date.now(); startDrain(); }
+  if (kind === 'danger') { dMeter = 100; dScore = 0; dChain = 1; dSolves = 0; dBestChain = 1; dLastSolve = Date.now(); startDrain(); drawDanger(); }
   newPuzzle();
 }
 
 function newPuzzle() {
-  puz = generate(mode, seedFor(mode.id, level));
-  if (!puz) { $('banner').textContent = 'The wall collapsed — try the next dig.'; level++; puz = generate(mode, seedFor(mode.id, level)); }
+  curOpts = effOpts(mode, level);
+  puz = generate(curOpts, seedFor(mode.id, level));
+  if (!puz) { $('banner').textContent = 'The wall collapsed — try the next dig.'; level++; curOpts = effOpts(mode, level); puz = generate(curOpts, seedFor(mode.id, level)); }
   states = new Array(puz.n * puz.n).fill(0);
-  hints = 3; solvedThis = false;
+  hints = 3; solvedThis = false; digStart = Date.now();
   $('winBox').classList.add('hidden'); $('overBox').classList.add('hidden');
   $('banner').textContent = '';
   $('modeName').textContent = mode.emoji + ' ' + mode.name;
@@ -383,20 +404,22 @@ function newPuzzle() {
 }
 
 function updateMeta() {
-  if (kind === 'danger') { $('modeMeta').textContent = 'Dig ' + level; return; }
+  const d = heatFor(level);
+  const heat = d > 0 ? ' · ' + '🔥'.repeat(Math.min(d, 4)) + (d > 4 ? '×' + d : '') : '';
+  if (kind === 'danger') { $('modeMeta').textContent = 'Dig ' + level + heat; return; }
   const depth = (level - 1) * THEME.depthStep;
-  $('modeMeta').textContent = THEME.depthWord + ' ' + depth + THEME.depthUnit + ' · Dig ' + level;
+  $('modeMeta').textContent = THEME.depthWord + ' ' + depth + THEME.depthUnit + ' · Dig ' + level + heat;
 }
 
 function startStudy() {
   memPhase = 'study'; peeksLeft = mode.peeks;
-  let left = mode.studySeconds;
+  let left = curOpts.studySeconds || mode.studySeconds;
   $('studyHud').classList.remove('hidden');
   $('studyHud').textContent = mode.emoji + ' Study the wall… ' + left;
   clearInterval(memTimer);
   memTimer = setInterval(() => {
     left--;
-    if (left <= 0) { clearInterval(memTimer); memPhase = 'play'; $('studyHud').textContent = mode.emoji + ' Lights out. Dig from memory.'; render(); updateTools(); }
+    if (left <= 0) { clearInterval(memTimer); memPhase = 'play'; digStart = Date.now(); $('studyHud').textContent = mode.emoji + ' Lights out. Dig from memory.'; render(); updateTools(); }
     else $('studyHud').textContent = mode.emoji + ' Study the wall… ' + left;
   }, 1000);
   updateTools();
@@ -480,6 +503,10 @@ function checkWin() {
   SFX.win(); buzz([20, 40, 60]);
   if (kind === 'danger') return dangerSolve();
   clearInterval(memTimer); $('studyHud').classList.add('hidden');
+  const secs = Math.max(1, Math.round((Date.now() - digStart) / 1000));
+  const prevBest = +(LS.get(mode.id + '_best_s')) || 0;
+  const newBest = !prevBest || secs < prevBest;
+  if (newBest) LS.set(mode.id + '_best_s', secs);
   level++;
   LS.set(mode.id + '_lvl', level);
   const wins = (+(LS.get(mode.id + '_wins')) || 0) + 1;
@@ -488,7 +515,8 @@ function checkWin() {
   const depth = (level - 1) * THEME.depthStep;
   $('winEmoji').textContent = THEME.gem;
   $('winTitle').textContent = THEME.winWord;
-  $('winSub').textContent = THEME.depthWord + ' reached: ' + depth + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins + ' on ' + mode.name;
+  $('winSub').textContent = THEME.depthWord + ' reached: ' + depth + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins +
+    ' · ' + secs + 's' + (newBest ? ' — NEW FASTEST DIG' : ' (fastest ' + prevBest + 's)');
   $('nextBtn').textContent = '⛏ Next dig — ' + depth + THEME.depthUnit;
   $('winBox').classList.remove('hidden');
   updateMeta();
@@ -508,7 +536,8 @@ function drawDanger() {
   const m = $('dMeter');
   m.style.width = Math.max(0, dMeter) + '%';
   m.classList.toggle('low', dMeter < 30);
-  $('dScore').textContent = 'Score ' + dScore;
+  const best = Math.max(+(LS.get('danger_best')) || 0, dScore);
+  $('dScore').textContent = 'Score ' + dScore + (best ? ' · Best ' + best : '');
   $('dChain').textContent = 'Chain ×' + dChain;
 }
 function dangerSolve() {
@@ -579,7 +608,12 @@ function statLine(m, k) {
   }
   const lvl = +(LS.get(m.id + '_lvl')) || 1;
   const wins = LS.get(m.id + '_wins') || 0;
-  return lvl > 1 ? THEME.depthWord + ' ' + ((lvl - 1) * THEME.depthStep) + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins : 'Not dug yet';
+  const best = +(LS.get(m.id + '_best_s')) || 0;
+  const heat = heatFor(lvl);
+  return lvl > 1
+    ? THEME.depthWord + ' ' + ((lvl - 1) * THEME.depthStep) + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins +
+      (best ? ' · fastest ' + best + 's' : '') + (heat > 0 ? ' · ' + '🔥'.repeat(Math.min(heat, 4)) : '')
+    : 'Not dug yet';
 }
 function buildMenu() {
   const host = $('tierCards');
