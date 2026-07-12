@@ -8,6 +8,7 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-PLCVJ82B8T');
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -462,6 +463,7 @@ function effOpts(m, lvl) {
 }
 
 function startMode(m, k) {
+  gaTrack('level_start', { game: 'minedoku', level_name: m.id + '_' + k });
   mode = m; kind = k; solvedThis = false;
   level = kind === 'danger' ? 1 : (+(LS.get(m.id + '_lvl')) || 1);
   $('menu').classList.add('hidden'); $('game').classList.remove('hidden');
@@ -606,6 +608,7 @@ function isSolved() {
 function checkWin() {
   if (!isSolved()) return;
   solvedThis = true;
+  gaTrack('level_end', { game: 'minedoku', level_name: mode.id + '_' + kind, level: level, success: true });
   SFX.win(); buzz([20, 40, 60]);
   if (kind === 'danger') return dangerSolve();
   clearInterval(memTimer); $('studyHud').classList.add('hidden');
@@ -661,6 +664,7 @@ function dangerSolve() {
   setTimeout(() => { if (kind === 'danger' && dMeter > 0) newPuzzle(); }, 350);
 }
 function gameOver() {
+  gaTrack('post_score', { game: 'minedoku', level_name: 'danger', score: dScore });
   clearInterval(dTick);
   solvedThis = true;
   const best = +(LS.get('danger_best')) || 0;

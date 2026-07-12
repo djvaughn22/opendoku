@@ -8,6 +8,7 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-PLCVJ82B8T');
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -702,6 +703,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
     /* state */
     let grid,frozen,lineup,sel,deal,strikes=0,hintMsg=null;
     function newDeal(){
+      gaTrack('level_start', { game: 'slopedoku', level_name: level });
       const c=cfg();
       let sol,fz;
       if(level==='green'){
@@ -791,6 +793,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
         hintMsg=`Nice! ${lineup.length} card${lineup.length===1?'':'s'} to go — pick up another.`;
       render();
       if(lineup.length===0){
+        gaTrack('level_end', { game: 'slopedoku', level_name: level, success: true });
         SFX.win(); buzz([30,30,30]);
         localStorage.removeItem('sd_ft_save');
         const w=+(localStorage.getItem('sd_tracks_wins')||0)+1;
