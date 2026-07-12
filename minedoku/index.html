@@ -38,7 +38,7 @@
     display:flex; flex-direction:column; align-items:center;
     -webkit-tap-highlight-color:transparent;
   }
-  button{font-family:inherit; color:var(--ink); background:var(--btn); border:1px solid var(--btnbd); border-radius:10px; padding:10px 14px; cursor:pointer; font-size:.95rem;}
+  button{font-family:inherit; color:var(--ink); background:var(--btn); border:1px solid var(--btnbd); border-radius:10px; padding:10px 14px; cursor:pointer; font-size:.95rem; touch-action:manipulation;}
   button:disabled{opacity:.45; cursor:default;}
   .om-bar{width:100%; background:var(--panel); border-bottom:1px solid var(--border); font-family:system-ui,sans-serif;}
   .om-in{max-width:960px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
@@ -70,7 +70,7 @@
   .topline .meta{font-size:.78rem; color:var(--dim); font-weight:700;}
   .boardwrap{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:12px; margin-top:8px;}
   table.board{border-collapse:separate; border-spacing:5px; margin:0 auto; font-family:system-ui,sans-serif;}
-  td.cell{background:var(--cellbg); border:2px solid var(--border); border-radius:10px; text-align:center; font-weight:900; cursor:pointer; user-select:none; position:relative; transition:background .12s,border-color .12s,opacity .12s;}
+  td.cell{background:var(--cellbg); border:2px solid var(--border); border-radius:10px; text-align:center; font-weight:900; cursor:pointer; user-select:none; position:relative; transition:background .12s,border-color .12s,opacity .12s; touch-action:manipulation;}
   td.cell.mined{background:var(--minedbg); border-style:dashed; opacity:.55;}
   td.cell.mined .v{text-decoration:line-through; color:var(--dim);}
   td.cell.gem{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
@@ -151,6 +151,7 @@
       <button id="peekBtn" class="hidden"></button>
       <button id="resetBtn">Reset</button>
     </div>
+    <div class="banner" style="font-size:.74rem; min-height:0;">✓ = line done · <span style="color:var(--bad)">red</span> = dug too deep · small number = what the line adds to now</div>
     <div class="banner" id="banner"></div>
     <div id="winBox" class="winbox hidden">
       <div class="big" id="winEmoji"></div>
@@ -470,7 +471,9 @@ function newPuzzle() {
   states = new Array(puz.n * puz.n).fill(0);
   hints = 3; solvedThis = false; digStart = Date.now();
   $('winBox').classList.add('hidden'); $('overBox').classList.add('hidden');
-  $('banner').textContent = '';
+  $('banner').textContent = kind === 'danger'
+    ? '⛏ Quick digs — every clear feeds the meter!'
+    : '⛏ Dig ' + level + ' — mine until every row AND column hits its target.';
   $('modeName').textContent = mode.emoji + ' ' + mode.name;
   updateMeta();
   if (kind === 'memory') startStudy(); else { memPhase = 'play'; $('studyHud').classList.add('hidden'); }
@@ -562,6 +565,27 @@ function tapCell(i) {
   if (states[i] === 1) { SFX.mine(); buzz(12); } else if (states[i] === 2) { SFX.gem(); } else SFX.tap();
   render();
   checkWin();
+  if (!solvedThis) guide();
+}
+
+// Live coaching — the board state always tells the player what's going on.
+function guide() {
+  const n = puz.n;
+  let rowsOk = true, colsOk = true, overMined = false;
+  for (let r = 0; r < n; r++) {
+    const s = keptSum('r', r);
+    if (s !== puz.rowT[r]) rowsOk = false;
+    if (!lineHasNeg('r', r) && s < puz.rowT[r]) overMined = true;
+  }
+  for (let c = 0; c < n; c++) {
+    const s = keptSum('c', c);
+    if (s !== puz.colT[c]) colsOk = false;
+    if (!lineHasNeg('c', c) && s < puz.colT[c]) overMined = true;
+  }
+  if (overMined) $('banner').textContent = '⚠️ A red target = dug too deep there. Tap a mined tile to bring it back.';
+  else if (rowsOk && !colsOk) $('banner').textContent = 'Rows ✓ — but a column is off, so a row is keeping the wrong tiles. 💡 Hint can show one.';
+  else if (colsOk && !rowsOk) $('banner').textContent = 'Columns ✓ — but a row is off, so a column is keeping the wrong tiles. 💡 Hint can show one.';
+  else $('banner').textContent = '';
 }
 
 function isSolved() {
@@ -592,7 +616,9 @@ function checkWin() {
   $('winSub').textContent = THEME.depthWord + ' reached: ' + depth + THEME.depthUnit + ' · ' + THEME.gem + '×' + wins +
     ' · ' + secs + 's' + (newBest ? ' — NEW FASTEST DIG' : ' (fastest ' + prevBest + 's)');
   $('nextBtn').textContent = '⛏ Next dig — ' + depth + THEME.depthUnit;
+  $('banner').textContent = '';
   $('winBox').classList.remove('hidden');
+  $('winBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   updateMeta();
 }
 
@@ -636,6 +662,7 @@ function gameOver() {
   $('overTitle').textContent = mode.name + '! The roof came down.';
   $('overSub').textContent = 'Score ' + dScore + ' · best chain ×' + dBestChain + (dScore >= best && dScore > 0 ? ' · NEW BEST' : ' · best ' + Math.max(best, dScore));
   $('overBox').classList.remove('hidden');
+  $('overBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ---- tools ----
@@ -661,9 +688,15 @@ $('hintBtn').onclick = () => {
   const td = $('board').querySelector('td[data-i="' + i + '"]');
   if (td) td.classList.add('hintflash');
   checkWin();
+  if (!solvedThis) guide();
 };
 $('peekBtn').onclick = peek;
-$('resetBtn').onclick = () => { if (solvedThis) return; states.fill(0); $('banner').textContent = ''; render(); };
+$('resetBtn').onclick = () => {
+  if (solvedThis) return;
+  states.fill(0);
+  $('banner').textContent = '⛏ Fresh wall — mine until every row AND column hits its target.';
+  render();
+};
 $('nextBtn').onclick = () => newPuzzle();
 $('againBtn').onclick = () => startMode(mode, 'danger');
 $('backBtn').onclick = () => {
