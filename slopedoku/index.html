@@ -17,7 +17,7 @@
 <meta property="og:title" content="SlopeDoku — an OpenDoku game">
 <meta property="og:description" content="Sudoku × winter sports, easy to expert. Four slopes from bunny hill to double black diamond, plus Avalanche. First of many OpenDoku puzzle games.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏔️</text></svg>">
-<meta name="theme-color" content="#101a2c">
+<meta name="theme-color" content="#0b1220">
 <script>
 /* PWA wiring — only on snowdoku.com itself (not the idontcry embed):
    manifest + icons + offline service worker = installable app. */
@@ -33,8 +33,8 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
 </script>
 <style>
   :root{
-    --bg:#101a2c; --panel:#182335; --border:#2c3a56;
-    --ink:#c9d3e3; --dim:#94a3b8; --accent:#7dd3fc;
+    --bg:#0b1220; --panel:#141d2e; --border:#26324c;
+    --ink:#e8edf5; --dim:#94a3b8; --accent:#7dd3fc;
     --cell:#0e1930; --cellbd:#2a3a58; --frozen:#24405f; --frozenbd:#3f6288;
     --good:#1c3a2b; --goodbd:#3f7a52; --ok:#7fe08a;
     --btn:#1e2f4d; --btnbd:#3a5a80;
@@ -42,13 +42,13 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
     --sled:#ff8fb1; --hockey:#66e0d5; --curl:#d8c27a; --alpine:#9db2ff; --snowman:#dceeff;
   }
   [data-theme="light"]{
-    --bg:#34383f; --panel:#3e434b; --border:#545b64;
-    --ink:#d3d6db; --dim:#a2a8b0; --accent:#7dd3fc;
-    --cell:#3b414a; --cellbd:#565d67; --frozen:#41546b; --frozenbd:#5d7796;
-    --good:#3a4f42; --goodbd:#4ade80; --ok:#7fe08a;
-    --btn:#454b54; --btnbd:#5b626c;
-    --ski:#5ab0ff; --board:#ffab4a; --skate:#c99aff; --shoe:#7fe08a;
-    --sled:#ff8fb1; --hockey:#66e0d5; --curl:#d8c27a; --alpine:#9db2ff; --snowman:#dceeff;
+    --bg:#fefcf9; --panel:#ffffff; --border:#e4e4e7;
+    --ink:#1c1917; --dim:#57534e; --accent:#0284c7;
+    --cell:#f4f4f5; --cellbd:#d6d3d1; --frozen:#dbeafe; --frozenbd:#93c5fd;
+    --good:#dcfce7; --goodbd:#4ade80; --ok:#15803d;
+    --btn:#f4f4f5; --btnbd:#d4d4d8;
+    --ski:#1d4ed8; --board:#b45309; --skate:#7c3aed; --shoe:#15803d;
+    --sled:#be185d; --hockey:#0f766e; --curl:#92400e; --alpine:#4338ca; --snowman:#0369a1;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{
