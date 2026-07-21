@@ -67,6 +67,14 @@
   #gamesMenu a{display:flex; align-items:center; gap:10px; min-height:44px; box-sizing:border-box; padding:10px 14px; border-radius:12px; font-weight:600; font-size:.92rem; color:var(--ink); text-decoration:none;}
   #gamesMenu a:hover{background:var(--btn);}
   #gamesMenu .sep{border-top:1px solid var(--border); margin:6px 4px;}
+  /* om-dest-card: the quiet Be Prepared reminder (family standard) */
+  .dest-eyebrow{font-family:system-ui,sans-serif; font-size:.68rem; font-weight:900; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 4px;}
+  .dest-closing{color:var(--ink) !important; font-weight:bold;}
+  .dest-actions{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:14px;}
+  .dest-actions a.dest-primary{display:inline-flex; align-items:center; min-height:44px; padding:10px 20px; border-radius:999px; background:var(--accent); color:var(--bg); font-family:system-ui,sans-serif; font-weight:900; font-size:.9rem; text-decoration:none; overflow-wrap:anywhere;}
+  .dest-actions button{min-height:44px; border-radius:999px; font-weight:900; font-family:system-ui,sans-serif; font-size:.9rem; padding:10px 20px;}
+  .dest-status{min-height:20px; font-size:.85rem;}
+  .dest-attr{font-size:.75rem; opacity:.75;}
 </style>
 <script src="/games.js" defer></script>
   <!-- Refresh starts at the top (Open Mirror family standard): opt out of the
@@ -127,6 +135,22 @@
     <p>OpenDoku is built by <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>, a small family studio in St. Louis. New dokus start as ideas taken to <a href="https://stepinthering.com" target="_blank" rel="noopener noreferrer">StepInTheRing.com</a>.</p>
   </div>
 
+  <!-- The one quiet destination card — after everything that is OpenDoku.
+       Family standard copy; never in the header, menu, or game boards. -->
+  <section class="card" aria-label="Be prepared. Nothing dramatic.">
+    <p class="dest-eyebrow"><span aria-hidden="true">🎒 </span>A small reminder</p>
+    <h2>Be prepared. Nothing dramatic.</h2>
+    <p>Keep your phone charged. Know who you would call. Have a little food, water, and the basic things your household may need.</p>
+    <p>You do not have to expect the worst. A few simple plans can make an ordinary hard day easier.</p>
+    <p class="dest-closing">Prepared is just another word for ready to help.</p>
+    <div class="dest-actions">
+      <a class="dest-primary" href="https://pleasebeready.com" target="_blank" rel="noopener noreferrer">Visit PleaseBeReady.com</a>
+      <button id="bePreparedShareBtn" type="button">Share this reminder</button>
+    </div>
+    <p id="bePreparedShareStatus" class="dest-status" role="status" aria-live="polite"></p>
+    <p class="dest-attr">A note from the owner of Open Mirror LLC</p>
+  </section>
+
   <a class="back" href="/">🧩 Back to all games</a>
 </div>
 
@@ -150,6 +174,38 @@
   function apply(t){document.body.dataset.theme=t; document.documentElement.dataset.omTheme=t; b.textContent=t==='dark'?'🌙':'☀️';}
   apply(localStorage.getItem('om-theme')==='light'?'light':'dark');
   b.addEventListener('click',()=>{const t=document.body.dataset.theme==='dark'?'light':'dark'; localStorage.setItem('om-theme',t); apply(t);});
+})();
+</script>
+<script>
+// Share the Be Prepared reminder: native share first (backing out is a choice,
+// not an error), then copy the message and link; if copying is blocked the
+// address itself is shown, so an action always works. aria-live announces it.
+(function(){
+  var btn=document.getElementById('bePreparedShareBtn');
+  var status=document.getElementById('bePreparedShareStatus');
+  if(!btn||!status)return;
+  var TITLE='Be prepared. Nothing dramatic.';
+  var TEXT='Keep your phone charged, know who you would call, and keep a few basic household supplies. Prepared is just another word for ready to help.';
+  var URL='https://pleasebeready.com';
+  btn.addEventListener('click',function(){
+    if(navigator.share){
+      navigator.share({title:TITLE,text:TEXT,url:URL}).then(function(){status.textContent='';}).catch(function(err){
+        if(err && (err.name==='AbortError'||err.name==='NotAllowedError'))return; // quiet cancel
+        copyFallback();
+      });
+      return;
+    }
+    copyFallback();
+  });
+  function copyFallback(){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(TEXT+'\n'+URL).then(function(){
+        status.textContent='Copied — paste it anywhere.';
+      }).catch(function(){ status.textContent='Copying is blocked here. The address is '+URL; });
+    } else {
+      status.textContent='The address is '+URL;
+    }
+  }
 })();
 </script>
 <script>(function(){
