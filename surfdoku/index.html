@@ -548,9 +548,6 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku|surfdoku)\.com$/.test(loc
     GAME.productName.replace(/Doku$/,'<span>Doku</span>');
   document.querySelector('.brand').textContent=GAME.brand;
   document.querySelector('.om-bar .site').textContent=GAME.domain.toUpperCase();
-  document.getElementById('footBrand').innerHTML=
-    `${GAME.series}<span style="color:var(--accent)">${TLD}</span>`;
-  document.getElementById('footTag').textContent=` · ${GAME.productName} — ${GAME.tagline.toLowerCase()}`;
 
   /* ---------- tabs ---------- */
   let tab=null;
