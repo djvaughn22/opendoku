@@ -60,10 +60,10 @@
   .game .go{margin-left:auto; color:var(--accent); font-weight:bold; font-size:1.2rem;}
   .next{border-style:dashed; text-align:center; color:var(--dim); font-size:.85rem; padding:20px;}
   .om-foot{width:100%; margin-top:auto; background:var(--panel); border-top:1px solid var(--border); font-family:system-ui,sans-serif; font-size:.8rem; color:var(--dim);}
-  .om-foot .om-in{display:block; text-align:center; padding:24px 18px 28px;}
-  .om-foot a{text-decoration:none; font-weight:900; color:var(--dim);}
+  .om-foot .om-in{display:block; text-align:center; padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));}
+  .om-foot a{display:inline-block;padding:6px 2px;text-decoration:none; font-weight:900; color:var(--dim);}
   .om-foot p{margin:5px 0;}
-  .om-foot .om-disc{font-size:.68rem;opacity:.65;max-width:480px;margin:10px auto 0;line-height:1.6;}
+  .om-foot .om-sub a{font-weight:700;}.om-foot .om-legal{font-size:.68rem;opacity:.7;margin:6px auto 0;line-height:1.6;}.om-foot a:focus-visible{outline:2px solid var(--dim);outline-offset:2px;}.om-foot a:hover{text-decoration:underline;text-underline-offset:4px;}
   /* om-fam-standard: match the Open Mirror family menu (pill trigger + rows) */
   #gamesBtn{display:inline-flex; align-items:center; gap:6px; width:auto; min-height:40px; padding:8px 14px; border-radius:999px; font-size:.9rem; font-weight:900; font-family:system-ui,sans-serif;}
   @media(max-width:640px){#gamesBtn .lbl{display:none;}}
@@ -155,18 +155,14 @@
 
 <footer class="om-foot">
   <div class="om-in">
-    <!-- Line 1: OpenDoku site identity -->
-    <p>© 2026 <b>OpenDoku<span style="color:var(--accent)">.com</span></b> · One easy rule per game — then the climb</p>
-    <!-- Line 2: Family standard — Open Mirror LLC · About Open Mirror · CrossHeartPray -->
-    <p>
-      <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>
-      &nbsp;·&nbsp;
-      <a href="https://openmirrorllc.com/about-open-mirror" target="_blank" rel="noopener noreferrer">About Open Mirror</a>
-      &nbsp;·&nbsp;
-      <a href="https://crossheartpray.com" target="_blank" rel="noopener noreferrer" title="Visit CrossHeartPray">✝️ ❤️ 🙏</a>
-    </p>
-    <!-- Line 3: Family standard — independence statement and disclaimer -->
-    <p><span style="display:inline-block">Open Mirror LLC is a small independent company.</span> <span style="display:inline-block">·</span> <a href="https://openmirrorllc.com/disclaimer" target="_blank" rel="noopener noreferrer" style="font-weight:700;text-decoration:underline">Disclaimer</a></p>
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
   </div>
 </footer>
 

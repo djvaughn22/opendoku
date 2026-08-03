@@ -53,10 +53,10 @@
   .card a{color:var(--accent); font-weight:bold; text-decoration:none;}
   .back{display:block; text-align:center; margin-top:18px; font-family:system-ui,sans-serif; font-weight:800; color:var(--accent); text-decoration:none;}
   .om-foot{width:100%; margin-top:auto; background:var(--panel); border-top:1px solid var(--border); font-family:system-ui,sans-serif; font-size:.8rem; color:var(--dim);}
-  .om-foot .om-in{display:block; text-align:center; padding:24px 18px 28px;}
-  .om-foot a{text-decoration:none; font-weight:900; color:var(--dim);}
+  .om-foot .om-in{display:block; text-align:center; padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));}
+  .om-foot a{display:inline-block;padding:6px 2px;text-decoration:none; font-weight:900; color:var(--dim);}
   .om-foot p{margin:5px 0;}
-  .om-foot .om-disc{font-size:.68rem;opacity:.65;max-width:480px;margin:10px auto 0;line-height:1.6;}
+  .om-foot .om-sub a{font-weight:700;}.om-foot .om-legal{font-size:.68rem;opacity:.7;margin:6px auto 0;line-height:1.6;}.om-foot a:focus-visible{outline:2px solid var(--dim);outline-offset:2px;}.om-foot a:hover{text-decoration:underline;text-underline-offset:4px;}
   /* om-fam-standard: match the Open Mirror family menu (pill trigger + rows) */
   #gamesBtn{display:inline-flex; align-items:center; gap:6px; width:auto; min-height:40px; padding:8px 14px; border-radius:999px; font-size:.9rem; font-weight:900; font-family:system-ui,sans-serif;}
   @media(max-width:640px){#gamesBtn .lbl{display:none;}}
@@ -125,20 +125,31 @@
     <p>OpenDoku is built by <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>, a small family studio in St. Louis. New dokus start as ideas taken to <a href="https://stepinthering.com" target="_blank" rel="noopener noreferrer">StepInTheRing.com</a>.</p>
   </div>
 
+  <!-- The footer's Contact and Disclaimer links land on these two cards
+       (family standard, 2026-08-02). -->
+  <div class="card" id="contact" style="scroll-margin-top:96px">
+    <h2>Contact</h2>
+    <p>Have a question or an idea? Email <a href="mailto:ask@openmirrorllc.com?subject=Open%20Mirror%20Inquiry">ask@openmirrorllc.com</a>.</p>
+  </div>
+
+  <div class="card" id="disclaimer" style="scroll-margin-top:96px">
+    <h2>Disclaimer</h2>
+    <p>Open Mirror LLC is independently owned and operated. Nothing published by Open Mirror LLC is sponsored by, affiliated with, endorsed by, or representative of the owner&rsquo;s full-time employer. Read the <a href="https://openmirrorllc.com/disclaimer">full Open Mirror disclaimer</a>.</p>
+  </div>
+
   <a class="back" href="/">🧩 Back to all games</a>
 </div>
 
 <footer class="om-foot">
   <div class="om-in">
-    <p>© 2026 <b>OpenDoku<span style="color:var(--accent)">.com</span></b> · an Open Mirror LLC series</p>
-    <p>
-      <a href="/">ALL GAMES</a>
-      &nbsp;·&nbsp;
-      <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>
-      &nbsp;·&nbsp;
-      <a href="https://crossheartpray.com" target="_blank" rel="noopener noreferrer" title="CrossHeartPray">✝️ ❤️ 🙏</a>
-    </p>
-    <p class="om-disc"><span style="display:inline-block">Open Mirror LLC is a small independent company.</span> <a href="https://openmirrorllc.com/disclaimer" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-weight:700;text-decoration:underline">Full disclaimer</a></p>
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
   </div>
 </footer>
 

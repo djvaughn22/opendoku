@@ -81,11 +81,10 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
     width:100%; margin-top:auto; background:var(--panel); border-top:1px solid var(--border);
     font-family:system-ui,sans-serif; font-size:.8rem; color:var(--dim);
   }
-  .om-foot .om-in{display:block; text-align:center; padding:24px 18px 28px;}
-  .om-foot a{text-decoration:none; font-weight:900; color:var(--dim);}
-  .om-foot .icons{text-decoration:none;}
+  .om-foot .om-in{display:block; text-align:center; padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));}
+  .om-foot a{display:inline-block;padding:6px 2px;text-decoration:none; font-weight:900; color:var(--dim);}
   .om-foot p{margin:5px 0;}
-  .om-foot .om-disc{font-size:.68rem;opacity:.65;max-width:480px;margin:10px auto 0;line-height:1.6;}
+  .om-foot .om-sub a{font-weight:700;}.om-foot .om-legal{font-size:.68rem;opacity:.7;margin:6px auto 0;line-height:1.6;}.om-foot a:focus-visible{outline:2px solid var(--dim);outline-offset:2px;}.om-foot a:hover{text-decoration:underline;text-underline-offset:4px;}
   body.embedded .om-bar, body.embedded .om-foot, body.embedded .hero{display:none;}
   /* ---- hero + tabs ---- */
   .app{width:100%; max-width:430px; padding:14px 14px 48px; margin:0 auto;}
@@ -414,16 +413,14 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
 
 <footer class="om-foot">
   <div class="om-in">
-    <p>© 2026 <b id="footBrand">SnowDoku<span style="color:var(--accent)">.com</span></b><span id="footTag"> · Winter brain games in Roman numerals</span></p>
-    <p id="gamesFootNav"><a href="https://opendoku.com/">🧩 All games</a> &nbsp;·&nbsp; <a href="/surfdoku/">🌞 SurfDoku</a> &nbsp;·&nbsp; <a href="/minedoku/">⛏️ MineDoku</a> &nbsp;·&nbsp; <a href="https://opendoku.com/about/">About OpenDoku</a></p>
-    <p>
-      <a href="https://openmirrorllc.com" target="_blank" rel="noopener noreferrer">Open Mirror LLC</a>
-      &nbsp;·&nbsp;
-      <a href="https://openmirrorllc.com/about-open-mirror" target="_blank" rel="noopener noreferrer">About Open Mirror</a>
-      &nbsp;·&nbsp;
-      <a class="icons" href="https://crossheartpray.com" target="_blank" rel="noopener noreferrer" title="CrossHeartPray">✝️ ❤️ 🙏</a>
-    </p>
-    <p class="om-disc"><span style="display:inline-block">Open Mirror LLC is a small independent company.</span> <a href="https://openmirrorllc.com/disclaimer" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-weight:700;text-decoration:underline">Full disclaimer</a></p>
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
   </div>
 </footer>
 
