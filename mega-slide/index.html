@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mega Slide | OpenDoku</title>
+<meta name="description" content="Mega Slide, an OpenDoku Original: big slide puzzles with built-in pictures, 5×5, 6×6, and 7×7.">
+<meta property="og:title" content="Mega Slide — an OpenDoku Original">
+<meta property="og:description" content="Big slide puzzles with built-in pictures: 5×5, 6×6, and 7×7.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌄</text></svg>">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0b1220">
+<script>
+  if('serviceWorker' in navigator)
+    addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+</script>
+<!-- Google tag (gtag.js) — the opendoku.com GA4 property; shared by every game on this domain -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PLCVJ82B8T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-PLCVJ82B8T');
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
+</script>
+<link rel="stylesheet" href="/kit/od.css">
+<style>
+  .setrow{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .setrow .lbl{font-weight:800; font-size:.85rem; color:var(--dim);}
+  .setrow .chip{flex:0 0 auto; min-width:0; padding:6px 12px; font-size:.85rem;}
+</style>
+</head>
+<body data-theme="dark">
+
+<header class="om-bar">
+  <div class="om-in">
+    <a href="https://opendoku.com/" title="All the OpenDoku games">← OpenDoku.com</a>
+    <span class="right">
+      <span class="menuwrap">
+        <button id="gamesBtn" title="All the games" aria-haspopup="true" aria-expanded="false">☰<span class="lbl"> Menu</span></button>
+        <nav id="gamesMenu" hidden>
+          <a href="https://opendoku.com/">🧩 All games</a>
+          <a href="/face-regions/">🎨 Face Regions</a>
+          <a href="/face-slide/">🖼️ Face Slide</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="/picture-sudoku/">🍓 Picture Sudoku</a>
+          <a href="/mega-slide/">🌄 Mega Slide</a>
+          <a href="/slopedoku/">🏔️ SlopeDoku</a>
+          <a href="/surfdoku/">🌞 SurfDoku</a>
+          <a href="/minedoku/">⛏️ MineDoku</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="https://opendoku.com/about/">About OpenDoku</a>
+        </nav>
+      </span>
+      <button id="themeBtn" class="roundbtn" title="Light / dark">🌙</button>
+    </span>
+  </div>
+</header>
+
+<main class="app">
+  <h1 class="title">Mega <span>Slide</span></h1>
+  <p class="lede">Big slide puzzles with built-in pictures.</p>
+
+  <div class="chips" id="sizes" role="group" aria-label="Board size"></div>
+  <div class="setrow" role="group" aria-label="Picture"><span class="lbl">Picture:</span><span id="pics" class="setrow" style="margin:0"></span></div>
+  <div class="od-rule"><span class="ico" aria-hidden="true">🌄</span><p>Slide the tiles back into order. The numbers count <b>left to right, top to bottom</b>, with the gap ending bottom-right.</p></div>
+  <div class="od-status"><span id="count">0 moves</span><span class="od-dim" id="clock">0:00</span></div>
+  <div id="boardHost"></div>
+  <p class="od-msg" id="msg" aria-live="polite"></p>
+  <div class="od-toolbar">
+    <button class="od-btn" id="bPeek" title="Hold to see the whole picture">👀 Peek</button>
+    <button class="od-btn" id="bNums" aria-pressed="true" title="Show tile numbers">🔢 Numbers</button>
+    <button class="od-btn" id="bNew">🔀 Shuffle</button>
+  </div>
+  <section id="win" class="od-win hidden" aria-live="polite">
+    <div class="big" aria-hidden="true">🎉</div>
+    <h2>Picture complete!</h2>
+    <p id="winText"></p>
+    <div class="acts" id="winActs"></div>
+  </section>
+  <details class="od-how">
+    <summary>How to play</summary>
+    <ul>
+      <li><b>Tap a tile</b> next to the empty square to slide it in. Tap a tile further along the same row or column to slide the whole line at once.</li>
+      <li>You can also <b>swipe</b> on the board, or use the arrow keys.</li>
+      <li>Put the tiles in order: 1 in the top-left, counting across each row, with the gap ending in the bottom-right.</li>
+      <li>A good way in: finish the top row, then the left column, and keep shrinking the puzzle.</li>
+      <li>Hold <b>👀 Peek</b> to see the finished picture. <b>🔢 Numbers</b> turns the tile numbers on or off.</li>
+      <li>Every shuffle can be solved.</li>
+    </ul>
+  </details>
+</main>
+
+<footer class="om-foot">
+  <div class="om-in">
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
+  </div>
+</footer>
+
+<script src="/games.js" defer></script>
+<script src="/kit/photo-kit.js"></script>
+<script src="/kit/slide-engine.js"></script>
+<script src="/kit/slide-board.js"></script>
+<script>
+(function () {
+  "use strict";
+  var K = OD_Kit, S = OD_Slide, $ = function (id) { return document.getElementById(id); };
+  K.initChrome();
+
+  var SIZES = [5, 6, 7], LABELS = { 5: "Big", 6: "Mega", 7: "Giant" };
+  var STATE_KEY = "od_ms_state_v1", PREF_KEY = "od_ms_prefs", BEST_KEY = "od_ms_best_v1";
+
+  /* ---------- built-in pictures (drawn here, no image files) ---------- */
+
+  var W = 720;
+  function canvas() { var c = document.createElement("canvas"); c.width = c.height = W; return c; }
+  function circle(x, cx, cy, r, color) { x.fillStyle = color; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
+  function poly(x, pts, color) { x.fillStyle = color; x.beginPath(); x.moveTo(pts[0], pts[1]); for (var i = 2; i < pts.length; i += 2) x.lineTo(pts[i], pts[i + 1]); x.closePath(); x.fill(); }
+
+  function drawSunset() {
+    var c = canvas(), x = c.getContext("2d");
+    ["#2b1b5a", "#4a2479", "#7a2c84", "#b23a7a", "#e2556c", "#f47f5a", "#fbb35a"].forEach(function (col, i) {
+      x.fillStyle = col; x.fillRect(0, i * 66, W, 67);
+    });
+    circle(x, 360, 430, 110, "#ffe08a");
+    circle(x, 360, 430, 84, "#fff1b8");
+    poly(x, [0, 470, 120, 330, 210, 420, 330, 280, 470, 450, 560, 350, 720, 470, 720, 520, 0, 520], "#4b2363");
+    poly(x, [0, 500, 90, 420, 200, 500, 300, 410, 420, 500, 520, 430, 640, 500, 720, 450, 720, 540, 0, 540], "#331846");
+    x.fillStyle = "#1d2b5c"; x.fillRect(0, 530, W, 190);
+    ["#f47f5a", "#fbb35a", "#ffe08a", "#e2556c"].forEach(function (col, i) {
+      x.fillStyle = col; x.fillRect(250 + i * 12, 560 + i * 34, 220 - i * 24, 8);
+    });
+    x.strokeStyle = "#2b1b5a"; x.lineWidth = 6; x.lineCap = "round";
+    [[150, 150], [210, 120], [560, 170], [610, 140]].forEach(function (p) {
+      x.beginPath(); x.moveTo(p[0] - 22, p[1] - 10); x.quadraticCurveTo(p[0] - 8, p[1] - 14, p[0], p[1]); x.quadraticCurveTo(p[0] + 8, p[1] - 14, p[0] + 22, p[1] - 10); x.stroke();
+    });
+    x.fillStyle = "#1a1030";
+    x.fillRect(560, 610, 12, 60); poly(x, [520, 615, 612, 615, 566, 575], "#1a1030");
+    return c.toDataURL("image/jpeg", 0.9);
+  }
+
+  function drawBalloons() {
+    var c = canvas(), x = c.getContext("2d");
+    x.fillStyle = "#8fd3ff"; x.fillRect(0, 0, W, W);
+    x.fillStyle = "#b9e4ff"; x.fillRect(0, 0, W, 180);
+    function cloud(cx, cy, s) { [[0, 0, 1], [-0.9, 0.25, 0.7], [0.9, 0.25, 0.75], [0.35, -0.45, 0.75], [-0.4, -0.35, 0.6]].forEach(function (b) { circle(x, cx + b[0] * 50 * s, cy + b[1] * 50 * s, b[2] * 50 * s, "#ffffff"); }); }
+    cloud(130, 140, 1.1); cloud(560, 90, 0.9); cloud(470, 330, 0.8); cloud(90, 470, 0.7);
+    poly(x, [0, 610, 160, 560, 330, 600, 500, 545, 720, 600, 720, 720, 0, 720], "#f0b46a");
+    poly(x, [0, 660, 200, 630, 420, 670, 720, 640, 720, 720, 0, 720], "#d98f4e");
+    function balloon(cx, cy, r, colors) {
+      var stripes = colors.length;
+      for (var i = 0; i < stripes; i++) {
+        x.fillStyle = colors[i];
+        x.beginPath();
+        x.ellipse(cx, cy, r * (1 - i / stripes), r * 1.12, 0, 0, Math.PI * 2);
+        x.fill();
+      }
+      poly(x, [cx - r * 0.55, cy + r * 0.85, cx + r * 0.55, cy + r * 0.85, cx + r * 0.22, cy + r * 1.35, cx - r * 0.22, cy + r * 1.35], colors[0]);
+      x.strokeStyle = "#5b3a1e"; x.lineWidth = 3;
+      x.beginPath(); x.moveTo(cx - r * 0.22, cy + r * 1.35); x.lineTo(cx - r * 0.18, cy + r * 1.62); x.moveTo(cx + r * 0.22, cy + r * 1.35); x.lineTo(cx + r * 0.18, cy + r * 1.62); x.stroke();
+      x.fillStyle = "#8a5a2b"; x.fillRect(cx - r * 0.22, cy + r * 1.62, r * 0.44, r * 0.3);
+    }
+    balloon(200, 300, 95, ["#e5484d", "#ffd166", "#e5484d"]);
+    balloon(470, 200, 70, ["#7c5cd6", "#ffffff", "#7c5cd6"]);
+    balloon(560, 430, 60, ["#ff8c42", "#ffe08a"]);
+    balloon(330, 120, 45, ["#3b82f6", "#ffffff"]);
+    balloon(110, 560, 38, ["#e879f9", "#fde68a"]);
+    return c.toDataURL("image/jpeg", 0.9);
+  }
+
+  function drawNight() {
+    var c = canvas(), x = c.getContext("2d"), rnd = S.rng(20261017);
+    x.fillStyle = "#0f1a3a"; x.fillRect(0, 0, W, W);
+    x.fillStyle = "#16244d"; x.fillRect(0, 300, W, 200);
+    for (var i = 0; i < 90; i++) circle(x, rnd() * W, rnd() * 380, rnd() * 2.6 + 0.8, i % 9 ? "#e8edf5" : "#fde68a");
+    circle(x, 560, 130, 70, "#fdf4c4");
+    circle(x, 535, 112, 14, "#efe2a5"); circle(x, 585, 150, 10, "#efe2a5"); circle(x, 570, 100, 7, "#efe2a5");
+    var xpos = 0;
+    while (xpos < W) {
+      var w = 60 + rnd() * 70, h = 160 + rnd() * 300, top = 720 - h;
+      x.fillStyle = rnd() < 0.5 ? "#1f2b52" : "#28376a";
+      x.fillRect(xpos, top, w, h);
+      if (rnd() < 0.3) { x.fillRect(xpos + w / 2 - 4, top - 40, 8, 40); circle(x, xpos + w / 2, top - 42, 6, "#f87171"); }
+      for (var wy = top + 16; wy < 700; wy += 26) {
+        for (var wx = xpos + 10; wx < xpos + w - 14; wx += 20) {
+          if (rnd() < 0.55) { x.fillStyle = rnd() < 0.8 ? "#ffd76a" : "#7dd3fc"; x.fillRect(wx, wy, 10, 14); }
+        }
+      }
+      xpos += w + 4;
+    }
+    x.fillStyle = "#0b1220"; x.fillRect(0, 690, W, 30);
+    return c.toDataURL("image/jpeg", 0.9);
+  }
+
+  var PICS = {
+    sunset: { label: "🌅 Sunset", draw: drawSunset },
+    balloons: { label: "🎈 Balloons", draw: drawBalloons },
+    night: { label: "🌃 Night city", draw: drawNight },
+  };
+  var picCache = {};
+  function picture(k) { return picCache[k] || (picCache[k] = PICS[k].draw()); }
+
+  /* ---------- game ---------- */
+
+  var prefs = K.getJSON(PREF_KEY, { size: 5, pic: "sunset", nums: true });
+  if (SIZES.indexOf(prefs.size) < 0) prefs.size = 5;
+  if (!PICS[prefs.pic]) prefs.pic = "sunset";
+  if (typeof prefs.nums !== "boolean") prefs.nums = true;
+  var game = null, board = null, tick = null;
+
+  function saveState() {
+    if (!game) return;
+    K.setJSON(STATE_KEY, { n: game.n, seed: game.seed, tiles: game.tiles, moves: game.moves, elapsed: game.elapsed, won: game.won });
+  }
+
+  function validTiles(n, t) {
+    if (!Array.isArray(t) || t.length !== n * n) return false;
+    var seen = {};
+    for (var i = 0; i < t.length; i++) { if (!(t[i] >= 0 && t[i] < n * n) || seen[t[i]]) return false; seen[t[i]] = true; }
+    return S.isSolvable(n, t);
+  }
+
+  function newGame(n, seed, restore) {
+    stopClock();
+    var ok = restore && validTiles(n, restore.tiles);
+    game = {
+      n: n, seed: seed >>> 0,
+      tiles: ok ? restore.tiles : S.shuffle(n, seed),
+      moves: ok ? restore.moves | 0 : 0,
+      elapsed: ok ? restore.elapsed | 0 : 0,
+      won: ok ? !!restore.won : false,
+    };
+    $("win").classList.add("hidden");
+    setMsg(game.moves ? "" : "Tap a tile next to the gap to start.");
+    renderChips();
+    board = OD_SlideBoard.create($("boardHost"), {
+      n: n, tiles: game.tiles, moves: game.moves, picture: picture(prefs.pic), numbers: prefs.nums,
+      onMove: function (st) { startClock(); game.tiles = st.tiles; game.moves = st.moves; status(); setMsg(""); saveState(); },
+      onWin: function (st) { game.won = true; game.moves = st.moves; stopClock(); status(); saveState(); showWin(true); },
+    });
+    status();
+    if (game.won) showWin(false);
+    saveState();
+  }
+
+  function status() {
+    $("count").textContent = game.moves + (game.moves === 1 ? " move" : " moves");
+    $("clock").textContent = K.fmtTime(game.elapsed);
+  }
+
+  function renderChips() {
+    var host = $("sizes");
+    host.innerHTML = "";
+    SIZES.forEach(function (n) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(game.n === n));
+      b.innerHTML = LABELS[n] + "<small>" + n + "×" + n + "</small>";
+      b.addEventListener("click", function () {
+        if (game.n === n) return;
+        prefs.size = n; K.setJSON(PREF_KEY, prefs);
+        newGame(n, K.newSeed());
+      });
+      host.appendChild(b);
+    });
+    var ph = $("pics");
+    ph.innerHTML = "";
+    Object.keys(PICS).forEach(function (k) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(prefs.pic === k));
+      b.textContent = PICS[k].label;
+      b.addEventListener("click", function () {
+        prefs.pic = k; K.setJSON(PREF_KEY, prefs);
+        renderChips();
+        if (board) board.setPicture(picture(k));
+      });
+      ph.appendChild(b);
+    });
+  }
+
+  function setMsg(t, kind) { var m = $("msg"); m.textContent = t; m.className = "od-msg" + (kind ? " " + kind : ""); }
+
+  var peekBtn = $("bPeek"), peekTimer = null;
+  function peek(on) { if (board) board.peek(on); }
+  peekBtn.addEventListener("pointerdown", function (e) { e.preventDefault(); peek(true); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { peekBtn.addEventListener(ev, function () { peek(false); }); });
+  peekBtn.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault(); peek(true);
+    clearTimeout(peekTimer); peekTimer = setTimeout(function () { peek(false); }, 1500);
+  });
+  peekBtn.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  $("bNums").setAttribute("aria-pressed", String(prefs.nums));
+  $("bNums").addEventListener("click", function () {
+    prefs.nums = !prefs.nums; K.setJSON(PREF_KEY, prefs);
+    this.setAttribute("aria-pressed", String(prefs.nums));
+    if (board) board.setNumbers(prefs.nums);
+  });
+  $("bNew").addEventListener("click", function () { newGame(game.n, K.newSeed()); });
+
+  function startClock() {
+    if (game.won || tick) return;
+    tick = setInterval(function () {
+      if (document.hidden) return;
+      game.elapsed++;
+      $("clock").textContent = K.fmtTime(game.elapsed);
+      if (game.elapsed % 5 === 0) saveState();
+    }, 1000);
+  }
+  function stopClock() { clearInterval(tick); tick = null; }
+
+  function showWin(fresh) {
+    var n = game.n, best = K.getJSON(BEST_KEY, {}), isBest = false;
+    if (fresh) {
+      if (!best[n] || game.moves < best[n]) { best[n] = game.moves; K.setJSON(BEST_KEY, best); isBest = true; }
+      K.burst();
+      gaTrack("mega_slide_win", { size: n, moves: game.moves });
+    }
+    var bits = [n + "×" + n + " in " + game.moves + (game.moves === 1 ? " move" : " moves"), K.fmtTime(game.elapsed)];
+    if (isBest) bits.push("your fewest moves yet");
+    $("winText").textContent = bits.join(" · ");
+    var acts = $("winActs");
+    acts.innerHTML = "";
+    var next = SIZES[SIZES.indexOf(n) + 1];
+    if (next) acts.appendChild(K.btn("Try " + LABELS[next] + " " + next + "×" + next, "primary", function () { prefs.size = next; K.setJSON(PREF_KEY, prefs); newGame(next, K.newSeed()); }));
+    acts.appendChild(K.btn("🔀 Another " + n + "×" + n, next ? "" : "primary", function () { newGame(n, K.newSeed()); }));
+    acts.appendChild(K.btn("🖼️ Slide someone's photo instead", "", function () { location.href = "/face-slide/"; }));
+    $("win").classList.remove("hidden");
+    setMsg("");
+  }
+
+  var st = K.getJSON(STATE_KEY, null);
+  if (st && SIZES.indexOf(st.n) >= 0 && typeof st.seed === "number") newGame(st.n, st.seed, st);
+  else newGame(prefs.size, K.newSeed());
+
+  window.megaSlide = { get game() { return game; }, get board() { return board; } };
+})();
+</script>
+</body>
+</html>

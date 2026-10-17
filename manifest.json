@@ -1,7 +1,7 @@
 {
   "name": "OpenDoku — the puzzle-games family",
   "short_name": "OpenDoku",
-  "description": "OpenDoku, the Open Mirror puzzle-games series. SlopeDoku (winter), SurfDoku (beach), and MineDoku (underground number digs) — each starts with one easy rule and climbs.",
+  "description": "Photo puzzles starring your people: Face Regions and Face Slide. Plus the OpenDoku Originals: Picture Sudoku, Mega Slide, SlopeDoku, SurfDoku, and MineDoku.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

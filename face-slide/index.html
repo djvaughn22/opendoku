@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Face Slide | OpenDoku</title>
+<meta name="description" content="Face Slide, an OpenDoku game: add someone's photo, then slide the tiles until their picture is whole again. Send the puzzle to family or friends.">
+<meta property="og:title" content="Face Slide — an OpenDoku photo puzzle">
+<meta property="og:description" content="Someone's photo, cut into tiles and shuffled. Slide it back together, then send one to family or friends.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0b1220">
+<script>
+  /* A shared puzzle arrives after the "#" (it carries the photo). Move it into
+     this tab's storage and out of the address bar before analytics loads, so
+     the photo is never reported anywhere. */
+  (function(){var h=location.hash;if(h.indexOf("#v=1&")!==0)return;try{sessionStorage.setItem("od_shared_v1"+location.pathname,h.slice(1));history.replaceState(null,"",location.pathname+location.search);}catch(e){}})();
+  if('serviceWorker' in navigator)
+    addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+</script>
+<!-- Google tag (gtag.js) — the opendoku.com GA4 property; shared by every game on this domain -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PLCVJ82B8T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  // Never report the part after "#" (a shared puzzle's photo), even if it is still there.
+  gtag('config', 'G-PLCVJ82B8T', { page_location: location.origin + location.pathname + location.search });
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
+</script>
+<link rel="stylesheet" href="/kit/od.css">
+</head>
+<body data-theme="dark">
+
+<header class="om-bar">
+  <div class="om-in">
+    <a href="https://opendoku.com/" title="All the OpenDoku games">← OpenDoku.com</a>
+    <span class="right">
+      <span class="menuwrap">
+        <button id="gamesBtn" title="All the games" aria-haspopup="true" aria-expanded="false">☰<span class="lbl"> Menu</span></button>
+        <nav id="gamesMenu" hidden>
+          <a href="https://opendoku.com/">🧩 All games</a>
+          <a href="/face-regions/">🎨 Face Regions</a>
+          <a href="/face-slide/">🖼️ Face Slide</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="/picture-sudoku/">🍓 Picture Sudoku</a>
+          <a href="/mega-slide/">🌄 Mega Slide</a>
+          <a href="/slopedoku/">🏔️ SlopeDoku</a>
+          <a href="/surfdoku/">🌞 SurfDoku</a>
+          <a href="/minedoku/">⛏️ MineDoku</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="https://opendoku.com/about/">About OpenDoku</a>
+        </nav>
+      </span>
+      <button id="themeBtn" class="roundbtn" title="Light / dark">🌙</button>
+    </span>
+  </div>
+</header>
+
+<main class="app">
+  <h1 class="title">Face <span>Slide</span></h1>
+  <p class="lede">A photo cut into tiles and shuffled. Slide it back together.</p>
+
+  <section id="welcome" class="od-card od-welcome hidden" aria-labelledby="wTitle">
+    <img class="od-avatar xl" id="wPhoto" alt="">
+    <h2 id="wTitle">A puzzle for you</h2>
+    <p id="wText"></p>
+    <span class="beat hidden" id="wBeat"></span>
+    <button class="od-btn primary wide" id="wStart">Start the puzzle</button>
+  </section>
+
+  <section id="setupCard" class="od-card hidden" aria-labelledby="setupTitle">
+    <h2 id="setupTitle" style="margin:0 0 10px; font-size:1.15rem; font-weight:900;">Start with a photo</h2>
+    <div id="setup"></div>
+  </section>
+
+  <div id="play" class="hidden">
+    <div class="od-person">
+      <img class="od-avatar" id="pPhoto" alt="">
+      <div class="who"><span id="pName"></span><small id="pSub"></small></div>
+      <button class="od-btn" id="pChange">Change</button>
+    </div>
+    <div class="chips" id="sizes" role="group" aria-label="Board size"></div>
+    <div class="od-rule"><span class="ico" aria-hidden="true">🖼️</span><p id="ruleText"></p></div>
+    <div class="od-status"><span id="count">0 moves</span><span class="od-dim" id="clock">0:00</span></div>
+    <div id="boardHost"></div>
+    <p class="od-msg" id="msg" aria-live="polite"></p>
+    <div class="od-toolbar">
+      <button class="od-btn" id="bPeek" title="Hold to see the whole photo">👀 Peek</button>
+      <button class="od-btn" id="bNums" aria-pressed="false" title="Show tile numbers">🔢 Numbers</button>
+      <button class="od-btn" id="bNew">🔀 Shuffle</button>
+    </div>
+    <section id="win" class="od-win hidden" aria-live="polite">
+      <div class="big" aria-hidden="true">🎉</div>
+      <h2 id="winTitle"></h2>
+      <p id="winText"></p>
+      <div class="acts" id="winActs"></div>
+    </section>
+    <button class="od-btn primary wide" id="bShare" style="margin-top:14px">📤 Send this puzzle to someone</button>
+    <details class="od-how">
+      <summary>How to play</summary>
+      <ul>
+        <li><b>Tap a tile</b> next to the empty square to slide it in. Tap a tile further along the same row or column to slide the whole line.</li>
+        <li>You can also <b>swipe</b> on the board, or use the arrow keys.</li>
+        <li>The puzzle is done when the photo is whole again. The bottom-right piece drops in at the end.</li>
+        <li>Hold <b>👀 Peek</b> to see the finished photo. Turn on <b>🔢 Numbers</b> if you'd like each tile numbered in order.</li>
+        <li>Every shuffle can be solved.</li>
+        <li><b>📤 Send</b> makes a link with the same shuffle and photo for family or friends.</li>
+      </ul>
+    </details>
+  </div>
+</main>
+
+<footer class="om-foot">
+  <div class="om-in">
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
+  </div>
+</footer>
+
+<script src="/games.js" defer></script>
+<script src="/kit/photo-kit.js"></script>
+<script src="/kit/slide-engine.js"></script>
+<script src="/kit/slide-board.js"></script>
+<script>
+(function () {
+  "use strict";
+  var K = OD_Kit, S = OD_Slide, $ = function (id) { return document.getElementById(id); };
+  K.initChrome();
+
+  var SIZES = [3, 4, 5], LABELS = { 3: "Easy", 4: "Medium", 5: "Hard" };
+  var STATE_KEY = "od_fs_state_v1", SIZE_KEY = "od_fs_size", BEST_KEY = "od_fs_best_v1", NUM_KEY = "od_fs_nums";
+
+  var shared = K.readShared(SIZES);
+  if (shared && shared.g !== "slide") shared = null;
+  var locked = !!shared;
+  var person = null, game = null, board = null, tick = null;
+  var nums = false;
+  try { nums = localStorage.getItem(NUM_KEY) === "1"; } catch (e) {}
+
+  function plural(k, word) { return k + " " + word + (k === 1 ? "" : "s"); }
+  function possessive(name) { return name ? name + (/s$/i.test(name) ? "'" : "'s") + " photo" : "the photo"; }
+
+  /* ---------- person ---------- */
+
+  function showPerson() {
+    $("pPhoto").src = person.photo;
+    $("pName").textContent = person.name || "Your photo";
+    $("pSub").textContent = shared ? "Sent to you" : person.sample ? "Sample photo" : "Saved on this device";
+    $("pChange").textContent = shared ? "Use my photo" : person.sample ? "Add your photo" : "Change";
+    if (board) board.setPicture(person.photo);
+    $("ruleText").innerHTML = "";
+    var b = document.createElement("b"); b.textContent = possessive(person.name);
+    $("ruleText").append("Tap a tile next to the gap to slide it. Keep going until ", b, " is whole again.");
+  }
+
+  function openSetup(canCancel) {
+    $("play").classList.add("hidden");
+    $("setupCard").classList.remove("hidden");
+    $("setupTitle").textContent = person && !person.sample ? "Change the photo" : "Start with a photo";
+    K.mountPersonSetup($("setup"), {
+      person: person, saveLabel: "Play Face Slide",
+      onSave: function (p) { person = p; $("setupCard").classList.add("hidden"); startPlay(); },
+      onCancel: canCancel ? function () { $("setupCard").classList.add("hidden"); $("play").classList.remove("hidden"); } : null,
+    });
+  }
+
+  $("pChange").addEventListener("click", function () {
+    if (shared) { shared = null; locked = false; game = null; stopClock(); K.dropShared(); person = K.loadPerson(); if (!person) return openSetup(false); return startPlay(); }
+    openSetup(!!person);
+  });
+
+  /* ---------- game ---------- */
+
+  function saveState() {
+    if (shared || !game) return;
+    K.setJSON(STATE_KEY, { n: game.n, seed: game.seed, tiles: game.tiles, moves: game.moves, elapsed: game.elapsed, won: game.won });
+  }
+
+  function validTiles(n, t) {
+    if (!Array.isArray(t) || t.length !== n * n) return false;
+    var seen = {};
+    for (var i = 0; i < t.length; i++) { if (!(t[i] >= 0 && t[i] < n * n) || seen[t[i]]) return false; seen[t[i]] = true; }
+    return S.isSolvable(n, t);
+  }
+
+  function newGame(n, seed, restore) {
+    stopClock();
+    var ok = restore && validTiles(n, restore.tiles);
+    game = {
+      n: n, seed: seed >>> 0,
+      tiles: ok ? restore.tiles : S.shuffle(n, seed),
+      moves: ok ? restore.moves | 0 : 0,
+      elapsed: ok ? restore.elapsed | 0 : 0,
+      won: ok ? !!restore.won : false,
+    };
+    $("win").classList.add("hidden");
+    $("bShare").classList.remove("hidden");
+    setMsg(game.moves ? "" : "Tap a tile next to the gap to start.");
+    renderSizes();
+    board = OD_SlideBoard.create($("boardHost"), {
+      n: n, tiles: game.tiles, moves: game.moves, picture: person.photo, numbers: nums,
+      onMove: function (st) {
+        startClock();
+        game.tiles = st.tiles; game.moves = st.moves;
+        status(); setMsg(""); saveState();
+      },
+      onWin: function (st) {
+        game.won = true; game.moves = st.moves; stopClock(); status(); saveState(); showWin(true);
+      },
+    });
+    status();
+    if (game.won) showWin(false);
+    saveState();
+  }
+
+  function status() {
+    $("count").textContent = game.moves + (game.moves === 1 ? " move" : " moves");
+    $("clock").textContent = K.fmtTime(game.elapsed);
+  }
+
+  function renderSizes() {
+    var host = $("sizes");
+    host.classList.toggle("hidden", locked);
+    host.innerHTML = "";
+    SIZES.forEach(function (n) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(game && game.n === n));
+      b.innerHTML = LABELS[n] + "<small>" + n + "×" + n + "</small>";
+      b.addEventListener("click", function () {
+        if (game && game.n === n) return;
+        if (!shared) try { localStorage.setItem(SIZE_KEY, String(n)); } catch (e) {}
+        newGame(n, K.newSeed());
+      });
+      host.appendChild(b);
+    });
+  }
+
+  function setMsg(t, kind) { var m = $("msg"); m.textContent = t; m.className = "od-msg" + (kind ? " " + kind : ""); }
+
+  /* ---------- tools ---------- */
+
+  var peekBtn = $("bPeek"), peekTimer = null;
+  function peek(on) { if (board) board.peek(on); }
+  peekBtn.addEventListener("pointerdown", function (e) { e.preventDefault(); peek(true); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { peekBtn.addEventListener(ev, function () { peek(false); }); });
+  peekBtn.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault(); peek(true);
+    clearTimeout(peekTimer); peekTimer = setTimeout(function () { peek(false); }, 1500);
+  });
+  peekBtn.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  $("bNums").setAttribute("aria-pressed", String(nums));
+  $("bNums").addEventListener("click", function () {
+    nums = !nums;
+    this.setAttribute("aria-pressed", String(nums));
+    try { localStorage.setItem(NUM_KEY, nums ? "1" : "0"); } catch (e) {}
+    if (board) board.setNumbers(nums);
+  });
+  $("bNew").addEventListener("click", function () {
+    if (!game) return;
+    locked = false;
+    newGame(game.n, K.newSeed());
+  });
+
+  /* ---------- clock ---------- */
+
+  function startClock() {
+    if (game.won || tick) return;
+    tick = setInterval(function () {
+      if (document.hidden) return;
+      game.elapsed++;
+      $("clock").textContent = K.fmtTime(game.elapsed);
+      if (game.elapsed % 5 === 0) saveState();
+    }, 1000);
+  }
+  function stopClock() { clearInterval(tick); tick = null; }
+
+  /* ---------- win ---------- */
+
+  function showWin(fresh) {
+    var n = game.n, name = person.name;
+    var best = K.getJSON(BEST_KEY, {}), isBest = false;
+    if (fresh) {
+      if (!best[n] || game.moves < best[n]) { best[n] = game.moves; K.setJSON(BEST_KEY, best); isBest = true; }
+      K.burst();
+      gaTrack("face_slide_win", { size: n, shared: !!shared, moves: game.moves });
+    }
+    $("winTitle").textContent = name ? name + " is back together!" : "The photo is whole again!";
+    var bits = [n + "×" + n + " in " + game.moves + (game.moves === 1 ? " move" : " moves"), K.fmtTime(game.elapsed)];
+    if (isBest) bits.push("your fewest moves yet");
+    if (shared && shared.m) bits.push(game.moves <= shared.m ? "you beat their " + plural(shared.m, "move") : "they took " + plural(shared.m, "move"));
+    $("winText").textContent = bits.join(" · ");
+    var acts = $("winActs");
+    acts.innerHTML = "";
+    acts.appendChild(K.btn("📤 Send this puzzle to someone", "primary", share));
+    var next = SIZES[SIZES.indexOf(n) + 1];
+    if (next) acts.appendChild(K.btn("Try " + LABELS[next] + " " + next + "×" + next, "", function () { locked = false; if (!shared) try { localStorage.setItem(SIZE_KEY, String(next)); } catch (e) {} newGame(next, K.newSeed()); }));
+    else acts.appendChild(K.btn("🔀 Another " + n + "×" + n, "", function () { locked = false; newGame(n, K.newSeed()); }));
+    if (shared) acts.appendChild(K.btn("📷 Make one with your own photo", "", function () { location.href = "/#make"; }));
+    else acts.appendChild(K.btn("🎨 Play Face Regions" + (name ? " with " + name : ""), "", function () { location.href = "/face-regions/"; }));
+    $("win").classList.remove("hidden");
+    $("bShare").classList.add("hidden"); // the win card has its own Send button
+    setMsg("");
+  }
+
+  /* ---------- share ---------- */
+
+  function share() {
+    var name = person.name;
+    K.openShareSheet({
+      photo: person.photo,
+      title: "Face Slide" + (name ? " with " + name : ""),
+      subtitle: game.n + "×" + game.n + " · the same shuffle you " + (game.won ? "just solved" : "are playing"),
+      text: (name ? "I made you a Face Slide puzzle with " + name + " in it." : "I made you a Face Slide photo puzzle.") +
+        (game.won ? " I did it in " + plural(game.moves, "move") + ". Your turn!" : " Slide the tiles until " + possessive(name) + " is whole again."),
+      getUrl: function () {
+        return K.compactPhoto(person.photo).then(function (small) {
+          return location.origin + "/face-slide/#" + K.encodeShare({ g: "slide", s: game.n, k: game.seed, n: name, t: game.won ? game.elapsed : 0, m: game.won ? game.moves : 0, p: small });
+        });
+      },
+      onShared: function (how) { gaTrack("face_slide_share", { how: how, size: game.n }); },
+    });
+  }
+  $("bShare").addEventListener("click", share);
+
+  /* ---------- start ---------- */
+
+  function startPlay() {
+    $("welcome").classList.add("hidden");
+    $("play").classList.remove("hidden");
+    showPerson();
+    if (shared) return newGame(shared.s, shared.k);
+    if (game) { $("win").classList.toggle("hidden", !game.won); return; }
+    var st = K.getJSON(STATE_KEY, null);
+    if (st && SIZES.indexOf(st.n) >= 0 && typeof st.seed === "number") return newGame(st.n, st.seed, st);
+    var n = 3;
+    try { var s = parseInt(localStorage.getItem(SIZE_KEY), 10); if (SIZES.indexOf(s) >= 0) n = s; } catch (e) {}
+    newGame(n, K.newSeed());
+  }
+
+  if (shared) {
+    person = { name: shared.n, photo: shared.p, shared: true };
+    $("wPhoto").src = shared.p;
+    $("wTitle").textContent = shared.n ? "A puzzle starring " + shared.n : "A photo puzzle for you";
+    $("wText").textContent = "Someone sent you a Face Slide puzzle (" + shared.s + "×" + shared.s + "). Slide the tiles until " + possessive(shared.n) + " is whole again.";
+    if (shared.m) { $("wBeat").textContent = "Their score: " + plural(shared.m, "move") + (shared.t ? " in " + K.fmtTime(shared.t) : ""); $("wBeat").classList.remove("hidden"); }
+    $("welcome").classList.remove("hidden");
+    $("wStart").addEventListener("click", startPlay);
+    $("wStart").focus();
+  } else {
+    person = K.loadPerson();
+    if (person) startPlay(); else openSetup(false);
+  }
+
+  // test hooks (used by the automated checks; harmless for players)
+  window.faceSlide = {
+    get game() { return game; },
+    get board() { return board; },
+  };
+})();
+</script>
+</body>
+</html>

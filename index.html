@@ -10,70 +10,56 @@
   gtag('config', 'G-PLCVJ82B8T');
 </script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>OpenDoku</title>
-<meta name="description" content="OpenDoku, the Open Mirror puzzle-games series. SlopeDoku (winter), SurfDoku (beach), and MineDoku (underground number digs) — each starts with one easy rule and climbs. More dokus on the way.">
-<meta property="og:title" content="OpenDoku — the puzzle-games family">
-<meta property="og:description" content="SlopeDoku, SurfDoku, and more dokus to come — easy starts, two-puzzle summits. An Open Mirror LLC series.">
+<meta name="description" content="OpenDoku: photo puzzles starring your people. Add a photo and a name, play Face Regions or Face Slide, and send the puzzle to family or friends. Plus the Originals: Picture Sudoku, Mega Slide, SlopeDoku, SurfDoku, and MineDoku.">
+<meta property="og:title" content="OpenDoku — photo puzzles starring your people">
+<meta property="og:description" content="Add someone's photo and name, play Face Regions or Face Slide, then send the puzzle to family or friends.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="theme-color" content="#0b1220">
+<link rel="stylesheet" href="/kit/od.css">
 <style>
-  :root{
-    --bg:#0b1220; --panel:#141d2e; --border:#26324c;
-    --ink:#e8edf5; --dim:#94a3b8; --accent:#7dd3fc;
-    --btn:#1e2f4d; --btnbd:#3a5a80;
-  }
-  [data-theme="light"]{
-    --bg:#fefcf9; --panel:#ffffff; --border:#e4e4e7;
-    --ink:#1c1917; --dim:#57534e; --accent:#0284c7;
-    --btn:#f4f4f5; --btnbd:#d4d4d8;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
-    font-family:Georgia,'Times New Roman',serif;
-    display:flex; flex-direction:column; align-items:center;
-  }
-  button{font-family:inherit; color:var(--ink); background:var(--btn); border:1px solid var(--btnbd); border-radius:10px; padding:10px 14px; cursor:pointer;}
-  .om-bar{width:100%; background:var(--panel); border-bottom:1px solid var(--border); font-family:system-ui,sans-serif;}
-  .om-in{max-width:960px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
-  .om-bar a{font-weight:800; font-size:.95rem; color:var(--ink); text-decoration:none;}
-  .om-bar .right{display:flex; align-items:center; gap:10px;}
-  .om-bar .site{font-size:.7rem; font-weight:900; letter-spacing:.18em; color:var(--dim);}
-  #themeBtn{border-radius:50%; width:36px; height:36px; padding:0; font-size:1rem;}
-  .app{width:100%; max-width:430px; padding:14px 14px 48px; margin:0 auto;}
-  .hero{text-align:center; padding:26px 0 10px;}
-  .brand{width:76px; height:76px; margin:0 auto 12px; border-radius:24px; background:var(--panel); border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:2.5rem;}
-  h1{font-size:2.1rem; margin:0;}
-  h1 span{color:var(--accent);}
-  .series{margin:6px 0 0; font-size:.72rem; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); font-family:system-ui,sans-serif;}
-  .tag{margin:8px 0 0; font-size:.95rem; font-weight:bold; color:var(--accent);}
-  .sub{margin:5px 0 0; font-size:.82rem; color:var(--dim); font-style:italic;}
-  .game{display:block; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:18px; margin-top:14px; text-decoration:none; color:var(--ink);}
-  .game:hover{border-color:var(--accent);}
+  .hero{padding:10px 0 2px;}
+  .hero .title{font-size:2.05rem;}
+  .stepnum{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--warm); color:#1c1917; font-weight:900; font-size:.9rem; margin-right:8px; flex-shrink:0;}
+  .make h2{display:flex; align-items:center; margin:0 0 12px; font-size:1.15rem; font-weight:900;}
+  h2.sec{display:flex; align-items:center;}
+  .saved .od-person{margin-top:0;}
+  .saved p{margin:10px 2px 0; font-size:.85rem; color:var(--dim);}
+
+  /* signature game cards */
+  .sig{display:flex; gap:14px; align-items:center; margin-top:12px; padding:14px; background:var(--panel); border:1px solid var(--border); border-top:4px solid var(--accent); border-radius:20px; color:var(--ink); text-decoration:none;}
+  .sig.slide{border-top-color:var(--violet);}
+  .sig:hover,.sig:focus-visible{border-color:var(--accent);}
+  .sig:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+  .sig h3{margin:0; font-size:1.15rem; font-weight:900;}
+  .sig p{margin:4px 0 10px; font-size:.88rem; color:var(--dim); line-height:1.4;}
+  .sig p b{color:var(--ink);}
+  .sig .od-btn{min-height:40px; padding:8px 14px; font-size:.88rem;}
+  .sig-body{flex:1; min-width:0;}
+  .art{flex-shrink:0; width:104px; height:104px; border-radius:14px; overflow:hidden; display:grid;}
+  .art.regions{grid-template-columns:repeat(4,1fr); border:2px solid var(--line); background:var(--line); gap:0;}
+  .art.regions i{display:flex; align-items:center; justify-content:center; border:0 solid var(--line);}
+  .art.regions i.t{border-top-width:2px;} .art.regions i.l{border-left-width:2px;}
+  .art.regions i.a{background:var(--r0);} .art.regions i.b{background:var(--r5);} .art.regions i.c{background:var(--r3);} .art.regions i.d{background:var(--r1);}
+  .art.regions i.f::after{content:""; width:78%; height:78%; border-radius:50%; background-image:var(--photo); background-size:cover; background-position:center; border:2px solid #fff;}
+  .art.slide{grid-template-columns:repeat(3,1fr); gap:2px; background:var(--well); padding:2px; border:2px solid var(--border);}
+  .art.slide i{border-radius:5px; background-image:var(--photo); background-size:300% 300%;}
+  .art.slide i.gap{background:none;}
+  .send-note{margin:12px 2px 0; font-size:.86rem; color:var(--dim);}
+
+  /* Originals (the StepInTheRing Game Engine adds cards in this same shape) */
+  .game{display:block; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:14px 16px; margin-top:10px; text-decoration:none; color:var(--ink);}
+  .game:hover,.game:focus-visible{border-color:var(--accent);}
+  .game:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
   .game .row{display:flex; align-items:center; gap:14px;}
-  .game .ico{font-size:2.2rem;}
-  .game h2{margin:0; font-size:1.25rem;}
-  .game p{margin:4px 0 0; font-size:.85rem; color:var(--dim); line-height:1.5;}
-  .game .go{margin-left:auto; color:var(--accent); font-weight:bold; font-size:1.2rem;}
-  .next{border-style:dashed; text-align:center; color:var(--dim); font-size:.85rem; padding:20px;}
-  .om-foot{width:100%; margin-top:auto; background:var(--panel); border-top:1px solid var(--border); font-family:system-ui,sans-serif; font-size:.8rem; color:var(--dim);}
-  .om-foot .om-in{display:block; text-align:center; padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));}
-  .om-foot a{display:inline-block;padding:9px 2px;text-decoration:none; font-weight:900; color:var(--dim);}
-  .om-foot p{margin:5px 0;}
-  .om-foot .om-sub a{font-weight:700;}.om-foot .om-legal{font-size:.68rem;opacity:.7;margin:6px auto 0;line-height:1.6;}.om-foot a:focus-visible{outline:2px solid var(--dim);outline-offset:2px;}.om-foot a:hover{text-decoration:underline;text-underline-offset:4px;}
-  /* om-fam-standard: match the Open Mirror family menu (pill trigger + rows) */
-  #gamesBtn{display:inline-flex; align-items:center; gap:6px; width:auto; min-height:40px; padding:8px 14px; border-radius:999px; font-size:.9rem; font-weight:900; font-family:system-ui,sans-serif;}
-  @media(max-width:640px){#gamesBtn .lbl{display:none;}}
-  .om-in{position:relative;}
-  .menuwrap{position:static; display:inline-flex;}
-  #gamesMenu{position:absolute; right:16px; top:calc(100% + 8px); width:230px; max-width:calc(100vw - 2rem); max-height:min(70vh,30rem); overflow-y:auto; overflow-x:hidden; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:8px; z-index:60; box-shadow:0 20px 40px rgba(0,0,0,.4); font-family:system-ui,sans-serif; text-align:left;}
-  #gamesMenu[hidden]{display:none;}
-  #gamesMenu a{display:flex; align-items:center; gap:10px; min-height:44px; box-sizing:border-box; padding:10px 14px; border-radius:12px; font-weight:600; font-size:.92rem; color:var(--ink); text-decoration:none;}
-  #gamesMenu a:hover{background:var(--btn);}
-  #gamesMenu .sep{border-top:1px solid var(--border); margin:6px 4px;}
+  .game .ico{font-size:2rem; flex-shrink:0;}
+  .game h2{margin:0; font-size:1.05rem; font-weight:900;}
+  .game p{margin:3px 0 0; font-size:.84rem; color:var(--dim); line-height:1.4;}
+  .game .go{margin-left:auto; color:var(--accent); font-weight:900; font-size:1.2rem; flex-shrink:0;}
+  @media (max-width:360px){ .art{width:84px; height:84px;} .sig{gap:10px; padding:12px;} }
 </style>
   <!-- Refresh starts at the top (Open Mirror family standard): opt out of the
        browser's reload scroll restore only; back/forward + #anchors stay native. -->
@@ -89,6 +75,11 @@
         <button id="gamesBtn" title="Menu" aria-haspopup="true" aria-expanded="false">☰<span class="lbl"> Menu</span></button>
         <nav id="gamesMenu" hidden>
           <a href="/">🧩 All games</a>
+          <a href="/face-regions/">🎨 Face Regions</a>
+          <a href="/face-slide/">🖼️ Face Slide</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="/picture-sudoku/">🍓 Picture Sudoku</a>
+          <a href="/mega-slide/">🌄 Mega Slide</a>
           <a href="/slopedoku/">🏔️ SlopeDoku</a>
           <a href="/surfdoku/">🌞 SurfDoku</a>
           <a href="/minedoku/">⛏️ MineDoku</a>
@@ -96,20 +87,76 @@
           <a href="/about/">About OpenDoku</a>
         </nav>
       </span>
-
-      <button id="themeBtn" title="Light / dark">🌙</button>
+      <button id="themeBtn" class="roundbtn" title="Light / dark">🌙</button>
     </span>
   </div>
 </header>
 
-<div class="app">
-  <div class="hero">
-    <div class="brand" aria-hidden="true">🧩</div>
-    <h1>OpenDoku<span>.com</span></h1>
-    <p class="series">An Open Mirror LLC series</p>
-    <p class="tag">One easy rule per game — then the climb</p>
-    <p class="sub">Pick a world. Same brain, different ground.</p>
-  </div>
+<main class="app">
+  <section class="hero">
+    <h1 class="title">Puzzles starring <span>your people</span></h1>
+    <p class="lede">Add a photo, type their name, and pick a game. When you're done, send the puzzle to family or friends.</p>
+  </section>
+
+  <section id="make" class="od-card make" aria-labelledby="makeTitle">
+    <h2 id="makeTitle"><span class="stepnum" aria-hidden="true">1</span>Add a photo and a name</h2>
+    <div id="makeBody"></div>
+  </section>
+
+  <h2 class="sec"><span class="stepnum" aria-hidden="true">2</span>Pick a game</h2>
+
+  <a class="sig" href="/face-regions/" id="sigRegions">
+    <div class="art regions" aria-hidden="true">
+      <i class="a t l"></i><i class="a t f"></i><i class="b t l"></i><i class="b t"></i>
+      <i class="a l"></i><i class="c t l"></i><i class="c t"></i><i class="b l f"></i>
+      <i class="d t l f"></i><i class="c l"></i><i class="c"></i><i class="b l"></i>
+      <i class="d l"></i><i class="d t"></i><i class="c l f"></i><i class="c t"></i>
+    </div>
+    <div class="sig-body">
+      <h3>Face Regions <span class="badge-new">New</span></h3>
+      <p id="regionsText">Put one photo in every <b>row</b>, every <b>column</b>, and every <b>color</b>.</p>
+      <span class="od-btn primary" id="regionsGo">Play Face Regions</span>
+    </div>
+  </a>
+
+  <a class="sig slide" href="/face-slide/" id="sigSlide">
+    <div class="art slide" aria-hidden="true">
+      <i style="background-position:50% 0%"></i><i style="background-position:0% 50%"></i><i style="background-position:100% 0%"></i>
+      <i style="background-position:0% 0%"></i><i style="background-position:100% 50%"></i><i style="background-position:50% 100%"></i>
+      <i style="background-position:0% 100%"></i><i style="background-position:50% 50%"></i><i class="gap"></i>
+    </div>
+    <div class="sig-body">
+      <h3>Face Slide <span class="badge-new">New</span></h3>
+      <p id="slideText">The photo is cut into tiles and shuffled. <b>Slide it back together.</b></p>
+      <span class="od-btn primary" id="slideGo">Play Face Slide</span>
+    </div>
+  </a>
+  <p class="send-note">Both games have a <b>📤 Send</b> button. It makes a link with the same puzzle and photo, ready to text or email.</p>
+
+  <h2 class="sec">Originals</h2>
+  <p class="sec-sub">Puzzles with their own pictures. No photo needed.</p>
+
+  <a class="game" href="/picture-sudoku/">
+    <div class="row">
+      <span class="ico">🍓</span>
+      <span>
+        <h2>Picture Sudoku</h2>
+        <p>Sudoku with pictures instead of numbers. Start on 4×4, then try 6×6.</p>
+      </span>
+      <span class="go">→</span>
+    </div>
+  </a>
+
+  <a class="game" href="/mega-slide/">
+    <div class="row">
+      <span class="ico">🌄</span>
+      <span>
+        <h2>Mega Slide</h2>
+        <p>Big slide puzzles with built-in pictures: 5×5, 6×6, and 7×7.</p>
+      </span>
+      <span class="go">→</span>
+    </div>
+  </a>
 
   <a class="game" href="/slopedoku/">
     <div class="row">
@@ -133,7 +180,7 @@
     </div>
   </a>
 
-    <a class="game" href="/minedoku/">
+  <a class="game" href="/minedoku/">
     <div class="row">
       <span class="ico">⛏️</span>
       <span>
@@ -146,12 +193,7 @@
 
 <!-- __DOKU_CARDS_END__ : the StepInTheRing Game Engine inserts new game cards
        above this marker when it publishes a doku. Don't remove it. -->
-  <div class="game next">
-    Born from seven simple questions at
-    <a href="https://stepinthering.com" style="color:var(--accent); font-weight:bold; text-decoration:none">StepInTheRing.com</a> 🥊
-    — more dokus and other products on the way, built by starting there.
-  </div>
-</div>
+</main>
 
 <footer class="om-foot">
   <div class="om-in">
@@ -166,21 +208,76 @@
   </div>
 </footer>
 
+<script src="/games.js" defer></script>
+<script src="/kit/photo-kit.js"></script>
 <script>
-(function(){
-  const b=document.getElementById('themeBtn');
-  function apply(t){document.body.dataset.theme=t; document.documentElement.dataset.omTheme=t; b.textContent=t==='dark'?'🌙':'☀️';}
-  apply(localStorage.getItem('om-theme')==='light'?'light':'dark');
-  b.addEventListener('click',()=>{const t=document.body.dataset.theme==='dark'?'light':'dark'; localStorage.setItem('om-theme',t); apply(t);});
+(function () {
+  "use strict";
+  var K = OD_Kit, $ = function (id) { return document.getElementById(id); };
+  K.initChrome();
+
+  var sample = null;
+  function bold(t) { var b = document.createElement("b"); b.textContent = t; return b; }
+
+  // Cards show the saved person (or Biscuit until a photo is added).
+  function paintCards(person) {
+    var pic = person ? person.photo : (sample || (sample = K.samplePerson())).photo;
+    document.querySelectorAll(".art").forEach(function (a) { a.style.setProperty("--photo", 'url("' + pic + '")'); });
+    var name = person && person.name;
+    var rt = $("regionsText"), st = $("slideText");
+    rt.innerHTML = ""; st.innerHTML = "";
+    if (name) {
+      rt.append("Put ", bold(name), " once in every row, every column, and every color.");
+      st.append("Slide the tiles until ", bold(name + (/s$/i.test(name) ? "'" : "'s") + " photo"), " is whole again.");
+      $("regionsGo").textContent = "Play with " + name;
+      $("slideGo").textContent = "Play with " + name;
+    } else {
+      rt.append("Put one photo in every ", bold("row"), ", every ", bold("column"), ", and every ", bold("color"), ".");
+      st.append("The photo is cut into tiles and shuffled. ", bold("Slide it back together."));
+      $("regionsGo").textContent = "Play Face Regions";
+      $("slideGo").textContent = "Play Face Slide";
+    }
+  }
+
+  function showSaved(person) {
+    var body = $("makeBody");
+    body.innerHTML = "";
+    body.className = "saved";
+    var row = K.el("div", "od-person");
+    var img = K.el("img", "od-avatar lg"); img.src = person.photo; img.alt = "";
+    var who = K.el("div", "who");
+    who.appendChild(K.el("span", null, person.name || "Your photo"));
+    who.appendChild(K.el("small", null, person.sample ? "Sample photo" : "Saved on this device"));
+    var change = K.el("button", "od-btn", person.sample ? "Add your photo" : "Change");
+    change.type = "button";
+    change.addEventListener("click", function () { showSetup(person, true); });
+    row.appendChild(img); row.appendChild(who); row.appendChild(change);
+    body.appendChild(row);
+    body.appendChild(K.el("p", null, person.sample
+      ? "Biscuit is standing in. Add someone's photo to make the puzzles about them."
+      : "Ready. Pick a game below."));
+    paintCards(person);
+  }
+
+  function showSetup(person, canCancel) {
+    var body = $("makeBody");
+    body.className = "";
+    K.mountPersonSetup(body, {
+      person: person, saveLabel: "Save photo",
+      onSave: function (p) {
+        showSaved(p);
+        K.toast(p.sample ? "Playing with Biscuit" : "Saved. Now pick a game.");
+        var h = document.querySelector("h2.sec");
+        if (h && h.scrollIntoView) h.scrollIntoView({ behavior: "smooth", block: "start" });
+      },
+      onCancel: canCancel ? function () { showSaved(person); } : null,
+    });
+    paintCards(person && !person.sample ? person : null);
+  }
+
+  var person = K.loadPerson();
+  if (person) showSaved(person); else showSetup(null, false);
 })();
 </script>
-<script>(function(){
-  var b=document.getElementById('gamesBtn'), m=document.getElementById('gamesMenu');
-  if(!b||!m)return;
-  b.addEventListener('click',function(e){e.stopPropagation(); m.hidden=!m.hidden; b.setAttribute('aria-expanded',String(!m.hidden));});
-  document.addEventListener('click',function(e){if(!m.hidden && !m.contains(e.target)){m.hidden=true; b.setAttribute('aria-expanded','false');}});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape' && !m.hidden){m.hidden=true; b.setAttribute('aria-expanded','false'); b.focus();}});
-})();</script>
-
 </body>
 </html>

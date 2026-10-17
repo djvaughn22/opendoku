@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Face Regions | OpenDoku</title>
+<meta name="description" content="Face Regions, an OpenDoku game: add someone's photo, then place them once in every row, every column, and every color. Send the puzzle to family or friends.">
+<meta property="og:title" content="Face Regions — an OpenDoku photo puzzle">
+<meta property="og:description" content="Someone's photo, once in every row, column, and color. Make one and send it to family or friends.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0b1220">
+<script>
+  /* A shared puzzle arrives after the "#" (it carries the photo). Move it into
+     this tab's storage and out of the address bar before analytics loads, so
+     the photo is never reported anywhere. */
+  (function(){var h=location.hash;if(h.indexOf("#v=1&")!==0)return;try{sessionStorage.setItem("od_shared_v1"+location.pathname,h.slice(1));history.replaceState(null,"",location.pathname+location.search);}catch(e){}})();
+  if('serviceWorker' in navigator)
+    addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+</script>
+<!-- Google tag (gtag.js) — the opendoku.com GA4 property; shared by every game on this domain -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PLCVJ82B8T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  // Never report the part after "#" (a shared puzzle's photo), even if it is still there.
+  gtag('config', 'G-PLCVJ82B8T', { page_location: location.origin + location.pathname + location.search });
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
+</script>
+<link rel="stylesheet" href="/kit/od.css">
+<style>
+  .board{display:grid; width:100%; max-width:440px; margin:0 auto; aspect-ratio:1; border:3px solid var(--line); border-top:0; border-left:0; border-radius:14px; overflow:hidden; touch-action:manipulation; user-select:none; -webkit-user-select:none;}
+  .cell{position:relative; padding:0; margin:0; border:0 solid var(--thin); border-top-width:1px; border-left-width:1px; display:flex; align-items:center; justify-content:center; min-width:0; min-height:0; font-size:0; cursor:pointer;}
+  .cell.tt{border-top:3px solid var(--line);}
+  .cell.tl{border-left:3px solid var(--line);}
+  .cell.c0{background:var(--r0);} .cell.c1{background:var(--r1);} .cell.c2{background:var(--r2);} .cell.c3{background:var(--r3);}
+  .cell.c4{background:var(--r4);} .cell.c5{background:var(--r5);} .cell.c6{background:var(--r6);}
+  .cell:focus-visible{outline:3px solid var(--ink); outline-offset:-4px; z-index:2;}
+  .cell .tile{position:absolute; width:82%; height:82%; border-radius:50%; background-image:var(--photo); background-size:cover; background-position:center; border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.35); display:none;}
+  .cell.on .tile{display:block;}
+  .cell.pop .tile{animation:pop .28s ease-out;}
+  @keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .cell.bad{box-shadow:inset 0 0 0 4px var(--bad);}
+  .cell.bad .tile{border-color:var(--bad); box-shadow:0 0 0 3px var(--bad); animation:shake .35s;}
+  .cell.bad::before{content:"!"; position:absolute; top:3px; right:5px; z-index:1; font-size:.8rem; font-weight:900; color:#fff; background:var(--bad); border-radius:999px; min-width:16px; line-height:16px; text-align:center;}
+  @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .cell.blocked::after{content:""; position:absolute; width:16%; height:16%; border-radius:50%; background:rgba(0,0,0,.32);}
+  [data-theme="light"] .cell.blocked::after{background:rgba(0,0,0,.28);}
+  .cell .x{display:none; position:absolute; font-size:clamp(14px,6vw,26px); font-weight:900; color:rgba(0,0,0,.55);}
+  .cell.mark .x{display:block;}
+  .cell.mark.blocked::after{display:none;}
+  .cell.hinted{animation:hint 1.2s ease-out;}
+  @keyframes hint{0%,60%{box-shadow:inset 0 0 0 4px var(--warm)}100%{box-shadow:none}}
+  .board.won .cell.on .tile{animation:bounce .6s ease-out both; animation-delay:calc(var(--i) * 70ms);}
+  @keyframes bounce{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(-6deg)}100%{transform:scale(1)}}
+  .legend{display:flex; justify-content:center; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .legend span{display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; border:2px solid var(--line); font-size:.85rem; font-weight:900; color:#1c1917;}
+  .legend span.ok::after{content:"✓";}
+  .legend span.over::after{content:"!"; color:#7f1d1d;}
+  .legend .c0{background:var(--r0);} .legend .c1{background:var(--r1);} .legend .c2{background:var(--r2);} .legend .c3{background:var(--r3);}
+  .legend .c4{background:var(--r4);} .legend .c5{background:var(--r5);} .legend .c6{background:var(--r6);}
+  .building{display:flex; align-items:center; justify-content:center; aspect-ratio:1; max-width:440px; margin:0 auto; border-radius:14px; background:var(--panel); border:1px solid var(--border); color:var(--dim); font-weight:800;}
+</style>
+</head>
+<body data-theme="dark">
+
+<header class="om-bar">
+  <div class="om-in">
+    <a href="https://opendoku.com/" title="All the OpenDoku games">← OpenDoku.com</a>
+    <span class="right">
+      <span class="menuwrap">
+        <button id="gamesBtn" title="All the games" aria-haspopup="true" aria-expanded="false">☰<span class="lbl"> Menu</span></button>
+        <nav id="gamesMenu" hidden>
+          <a href="https://opendoku.com/">🧩 All games</a>
+          <a href="/face-regions/">🎨 Face Regions</a>
+          <a href="/face-slide/">🖼️ Face Slide</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="/picture-sudoku/">🍓 Picture Sudoku</a>
+          <a href="/mega-slide/">🌄 Mega Slide</a>
+          <a href="/slopedoku/">🏔️ SlopeDoku</a>
+          <a href="/surfdoku/">🌞 SurfDoku</a>
+          <a href="/minedoku/">⛏️ MineDoku</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="https://opendoku.com/about/">About OpenDoku</a>
+        </nav>
+      </span>
+      <button id="themeBtn" class="roundbtn" title="Light / dark">🌙</button>
+    </span>
+  </div>
+</header>
+
+<main class="app">
+  <h1 class="title">Face <span>Regions</span></h1>
+  <p class="lede">One photo tile in every row, every column, and every color.</p>
+
+  <section id="welcome" class="od-card od-welcome hidden" aria-labelledby="wTitle">
+    <img class="od-avatar xl" id="wPhoto" alt="">
+    <h2 id="wTitle">A puzzle for you</h2>
+    <p id="wText"></p>
+    <span class="beat hidden" id="wBeat"></span>
+    <button class="od-btn primary wide" id="wStart">Start the puzzle</button>
+  </section>
+
+  <section id="setupCard" class="od-card hidden" aria-labelledby="setupTitle">
+    <h2 id="setupTitle" style="margin:0 0 10px; font-size:1.15rem; font-weight:900;">Start with a photo</h2>
+    <div id="setup"></div>
+  </section>
+
+  <div id="play" class="hidden">
+    <div class="od-person">
+      <img class="od-avatar" id="pPhoto" alt="">
+      <div class="who"><span id="pName"></span><small id="pSub"></small></div>
+      <button class="od-btn" id="pChange">Change</button>
+    </div>
+    <div class="chips" id="sizes" role="group" aria-label="Board size"></div>
+    <div class="od-rule"><span class="ico" aria-hidden="true">🎨</span><p id="ruleText"></p></div>
+    <div class="od-status"><span id="count"></span><span class="od-dim" id="clock">0:00</span></div>
+    <div id="boardHost"></div>
+    <div class="legend" id="legend"></div>
+    <p class="od-msg" id="msg" aria-live="polite"></p>
+    <div class="od-toolbar">
+      <button class="od-btn" id="bMark" aria-pressed="false" title="Cross out squares">✕ Mark</button>
+      <button class="od-btn" id="bHint">💡 Hint</button>
+      <button class="od-btn" id="bClear">↺ Clear</button>
+      <button class="od-btn" id="bNew">🔀 New</button>
+    </div>
+    <section id="win" class="od-win hidden" aria-live="polite">
+      <div class="big" aria-hidden="true">🎉</div>
+      <h2 id="winTitle"></h2>
+      <p id="winText"></p>
+      <div class="acts" id="winActs"></div>
+    </section>
+    <button class="od-btn primary wide" id="bShare" style="margin-top:14px">📤 Send this puzzle to someone</button>
+    <details class="od-how">
+      <summary>How to play</summary>
+      <ul>
+        <li><b>Tap a square</b> to place a photo tile. Tap it again to take it back.</li>
+        <li>Every <b>row</b>, every <b>column</b>, and every <b>color</b> gets exactly one tile.</li>
+        <li>After you place a tile, the squares it rules out get a small dot.</li>
+        <li>Turn on <b>✕ Mark</b> to cross out squares yourself while you think.</li>
+        <li>If two tiles break a rule, they turn red and the message says why.</li>
+        <li><b>💡 Hint</b> takes off a tile that's in the wrong spot, or shows one right square.</li>
+        <li>Every puzzle has exactly one answer, and you can reach it without guessing.</li>
+        <li><b>📤 Send</b> makes a link with the same board and photo for family or friends.</li>
+      </ul>
+    </details>
+  </div>
+</main>
+
+<footer class="om-foot">
+  <div class="om-in">
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
+  </div>
+</footer>
+
+<script src="/games.js" defer></script>
+<script src="/kit/photo-kit.js"></script>
+<script src="/kit/regions-engine.js"></script>
+<script>
+(function () {
+  "use strict";
+  var K = OD_Kit, R = OD_Regions, $ = function (id) { return document.getElementById(id); };
+  K.initChrome();
+
+  var SIZES = [4, 5, 6, 7];
+  var COLOR_NAMES = ["yellow", "orange", "red", "pink", "purple", "blue", "brown"];
+  var STATE_KEY = "od_fr_state_v1", SIZE_KEY = "od_fr_size", BEST_KEY = "od_fr_best_v1";
+
+  var shared = K.readShared(SIZES);
+  if (shared && shared.g !== "regions") shared = null;
+  var person = null, game = null, markMode = false, cells = [], tick = null;
+  var locked = !!shared; // playing the exact board someone sent: size stays fixed
+
+  /* ---------- person ---------- */
+
+  function showPerson() {
+    $("pPhoto").src = person.photo;
+    $("pName").textContent = person.name || "Your photo";
+    $("pSub").textContent = shared ? "Sent to you" : person.sample ? "Sample photo" : "Saved on this device";
+    $("pChange").textContent = shared ? "Use my photo" : person.sample ? "Add your photo" : "Change";
+    $("boardHost").style.setProperty("--photo", 'url("' + person.photo + '")');
+    var w = K.who(person.name);
+    $("ruleText").innerHTML = "";
+    $("ruleText").append("Put ", bold(person.name ? w : "the photo"), " once in every ", bold("row"), ", every ", bold("column"), ", and every ", bold("color"), ".");
+  }
+  function bold(t) { var b = document.createElement("b"); b.textContent = t; return b; }
+
+  function openSetup(canCancel) {
+    $("play").classList.add("hidden");
+    $("setupCard").classList.remove("hidden");
+    $("setupTitle").textContent = person && !person.sample ? "Change the photo" : "Start with a photo";
+    K.mountPersonSetup($("setup"), {
+      person: person, saveLabel: "Play Face Regions",
+      onSave: function (p) { person = p; $("setupCard").classList.add("hidden"); startPlay(); },
+      onCancel: canCancel ? function () { $("setupCard").classList.add("hidden"); $("play").classList.remove("hidden"); } : null,
+    });
+  }
+
+  $("pChange").addEventListener("click", function () {
+    if (shared) { shared = null; locked = false; game = null; stopClock(); K.dropShared(); person = K.loadPerson(); if (!person) return openSetup(false); return startPlay(); }
+    openSetup(!!person);
+  });
+
+  /* ---------- game state ---------- */
+
+  function saveState() {
+    if (shared || !game) return;
+    K.setJSON(STATE_KEY, { n: game.n, seed: game.seed, placed: game.placed, marks: game.marks, hints: game.hints, elapsed: game.elapsed, won: game.won });
+  }
+
+  function newGame(n, seed, restore) {
+    stopClock();
+    $("clock").textContent = K.fmtTime(restore ? restore.elapsed | 0 : 0);
+    game = { n: n, seed: seed >>> 0, puzzle: null, placed: [], marks: [], hints: 0, elapsed: 0, won: false, started: false };
+    if (restore) {
+      game.placed = (restore.placed || []).filter(function (j) { return j >= 0 && j < n * n; });
+      game.marks = (restore.marks || []).filter(function (j) { return j >= 0 && j < n * n; });
+      game.hints = restore.hints | 0; game.elapsed = restore.elapsed | 0; game.won = !!restore.won;
+      game.started = game.elapsed > 0;
+    }
+    $("win").classList.add("hidden");
+    $("bShare").classList.remove("hidden");
+    $("legend").innerHTML = "";
+    $("boardHost").innerHTML = '<div class="building">Building your puzzle…</div>';
+    setMsg("");
+    renderSizes();
+    // let the "building" note paint before the (brief) work
+    setTimeout(function () {
+      game.puzzle = R.generate(n, game.seed);
+      buildBoard();
+      update(-1);
+      if (game.won) showWin(false);
+      saveState();
+    }, 30);
+  }
+
+  function renderSizes() {
+    var host = $("sizes");
+    host.classList.toggle("hidden", locked);
+    host.innerHTML = "";
+    SIZES.forEach(function (n) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(game && game.n === n));
+      b.innerHTML = R.SIZES[n].label + "<small>" + n + "×" + n + "</small>";
+      b.addEventListener("click", function () {
+        if (game && game.n === n) return;
+        if (!shared) try { localStorage.setItem(SIZE_KEY, String(n)); } catch (e) {}
+        newGame(n, K.newSeed());
+      });
+      host.appendChild(b);
+    });
+  }
+
+  /* ---------- board ---------- */
+
+  function buildBoard() {
+    var n = game.n, regs = game.puzzle.regions, board = document.createElement("div");
+    board.className = "board"; board.id = "board";
+    board.setAttribute("role", "grid"); board.setAttribute("aria-label", n + " by " + n + " board");
+    board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+    cells = [];
+    for (var r = 0; r < n; r++) {
+      var row = document.createElement("div");
+      row.setAttribute("role", "row"); row.style.display = "contents";
+      for (var c = 0; c < n; c++) {
+        var j = r * n + c, g = regs[j];
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "cell c" + g + (r === 0 || regs[j - n] !== g ? " tt" : "") + (c === 0 || regs[j - 1] !== g ? " tl" : "");
+        b.setAttribute("role", "gridcell");
+        b.dataset.j = j;
+        b.style.setProperty("--i", r + c);
+        b.innerHTML = '<span class="tile"></span><span class="x" aria-hidden="true">✕</span>';
+        b.addEventListener("click", onCell);
+        b.addEventListener("keydown", onKey);
+        row.appendChild(b);
+        cells.push(b);
+      }
+      board.appendChild(row);
+    }
+    $("boardHost").innerHTML = "";
+    $("boardHost").appendChild(board);
+    var leg = $("legend");
+    leg.innerHTML = "";
+    for (var g2 = 0; g2 < n; g2++) {
+      var s = document.createElement("span");
+      s.className = "c" + g2; s.setAttribute("role", "img");
+      leg.appendChild(s);
+    }
+  }
+
+  function onKey(e) {
+    var j = +this.dataset.j, n = game.n, r = (j / n) | 0, c = j % n, t = -1;
+    if (e.key === "ArrowRight" && c < n - 1) t = j + 1;
+    if (e.key === "ArrowLeft" && c > 0) t = j - 1;
+    if (e.key === "ArrowDown" && r < n - 1) t = j + n;
+    if (e.key === "ArrowUp" && r > 0) t = j - n;
+    if (t >= 0) { e.preventDefault(); cells[t].focus(); }
+  }
+
+  function onCell() {
+    if (!game || !game.puzzle || game.won) return;
+    var j = +this.dataset.j, pi = game.placed.indexOf(j), mi = game.marks.indexOf(j);
+    startClock();
+    if (markMode) {
+      if (pi >= 0) return;
+      if (mi >= 0) game.marks.splice(mi, 1); else game.marks.push(j);
+      update(-1);
+    } else if (pi >= 0) {
+      game.placed.splice(pi, 1);
+      update(-1);
+    } else {
+      if (mi >= 0) game.marks.splice(mi, 1);
+      game.placed.push(j);
+      update(j);
+    }
+    saveState();
+  }
+
+  function update(justPlaced) {
+    var n = game.n, regs = game.puzzle.regions;
+    var res = R.check(n, regs, game.placed), blocked = R.blocked(n, regs, game.placed);
+    var bad = {}, on = {}, mk = {};
+    res.conflicts.forEach(function (j) { bad[j] = true; });
+    game.placed.forEach(function (j) { on[j] = true; });
+    game.marks.forEach(function (j) { mk[j] = true; });
+    cells.forEach(function (b, j) {
+      b.classList.toggle("on", !!on[j]);
+      b.classList.toggle("bad", !!bad[j]);
+      b.classList.toggle("mark", !!mk[j] && !on[j]);
+      b.classList.toggle("blocked", !!blocked[j] && !on[j]);
+      b.classList.toggle("pop", j === justPlaced);
+      var r = ((j / n) | 0) + 1, c = (j % n) + 1;
+      b.setAttribute("aria-label", "Row " + r + ", column " + c + ", " + COLOR_NAMES[regs[j]] +
+        (on[j] ? (bad[j] ? ", photo tile, breaks a rule" : ", photo tile") : mk[j] ? ", crossed out" : ""));
+    });
+    var counts = {};
+    game.placed.forEach(function (j) { counts[regs[j]] = (counts[regs[j]] || 0) + 1; });
+    Array.prototype.forEach.call($("legend").children, function (s, g) {
+      s.classList.toggle("ok", counts[g] === 1);
+      s.classList.toggle("over", counts[g] > 1);
+      s.setAttribute("aria-label", COLOR_NAMES[g] + (counts[g] === 1 ? ": done" : counts[g] > 1 ? ": too many" : ": open"));
+    });
+    $("count").textContent = Math.min(game.placed.length, n) + " of " + n + " placed";
+    if (res.reasons.length) {
+      var why = res.reasons[0];
+      var where = why.kind === "color" ? "the " + COLOR_NAMES[why.index] + " color" : why.kind + " " + (why.index + 1);
+      setMsg("Two tiles in " + where + ". Each " + why.kind + " gets just one.", "bad");
+    } else if (game.placed.length > n) {
+      setMsg("That's more tiles than rows.", "bad");
+    } else if (!res.won) {
+      setMsg(game.placed.length ? "" : "Tap a square to place the first tile.");
+    }
+    if (res.won && !game.won) { game.won = true; stopClock(); showWin(true); }
+  }
+
+  function setMsg(t, kind) { var m = $("msg"); m.textContent = t; m.className = "od-msg" + (kind ? " " + kind : ""); }
+
+  /* ---------- tools ---------- */
+
+  $("bMark").addEventListener("click", function () {
+    markMode = !markMode;
+    this.setAttribute("aria-pressed", String(markMode));
+    setMsg(markMode ? "Mark is on: taps cross out squares." : "Mark is off: taps place tiles.");
+  });
+  $("bHint").addEventListener("click", function () {
+    if (!game || !game.puzzle || game.won) return;
+    startClock();
+    var h = R.hint(game.puzzle, game.placed);
+    if (!h) return;
+    game.hints++;
+    var b = cells[h.cell];
+    b.classList.remove("hinted"); void b.offsetWidth; b.classList.add("hinted");
+    if (h.type === "wrong") {
+      game.placed.splice(game.placed.indexOf(h.cell), 1);
+      update(-1);
+      setMsg("That tile was in the wrong spot, so it's been taken off.", "bad");
+    } else {
+      var mi = game.marks.indexOf(h.cell);
+      if (mi >= 0) game.marks.splice(mi, 1);
+      game.placed.push(h.cell);
+      update(h.cell);
+      if (!game.won) setMsg("There's one. That square has to hold a tile.", "good");
+    }
+    saveState();
+  });
+  $("bClear").addEventListener("click", function () {
+    if (!game || !game.puzzle || game.won) return;
+    game.placed = []; game.marks = [];
+    update(-1); saveState();
+  });
+  $("bNew").addEventListener("click", function () {
+    if (!game) return;
+    stopClock();
+    locked = false;
+    newGame(game.n, K.newSeed());
+  });
+
+  /* ---------- clock ---------- */
+
+  function startClock() {
+    if (game.won || tick) return;
+    game.started = true;
+    tick = setInterval(function () {
+      if (document.hidden) return;
+      game.elapsed++;
+      $("clock").textContent = K.fmtTime(game.elapsed);
+      if (game.elapsed % 5 === 0) saveState();
+    }, 1000);
+  }
+  function stopClock() { clearInterval(tick); tick = null; }
+
+  /* ---------- win ---------- */
+
+  function showWin(fresh) {
+    var n = game.n, name = person.name;
+    var best = K.getJSON(BEST_KEY, {}), isBest = false;
+    if (fresh) {
+      if (!best[n] || game.elapsed < best[n]) { best[n] = game.elapsed; K.setJSON(BEST_KEY, best); isBest = true; }
+      $("board").classList.add("won");
+      K.burst();
+      gaTrack("face_regions_win", { size: n, shared: !!shared, hints: game.hints });
+    }
+    $("clock").textContent = K.fmtTime(game.elapsed);
+    $("winTitle").textContent = name ? "You found every spot for " + name + "!" : "Solved!";
+    var bits = [n + "×" + n + " in " + K.fmtTime(game.elapsed), game.hints ? game.hints + (game.hints === 1 ? " hint" : " hints") : "no hints"];
+    if (isBest) bits.push("your best yet");
+    if (shared && shared.t) bits.push(game.elapsed <= shared.t ? "you beat their " + K.fmtTime(shared.t) : "their time: " + K.fmtTime(shared.t));
+    $("winText").textContent = bits.join(" · ");
+    var acts = $("winActs");
+    acts.innerHTML = "";
+    acts.appendChild(K.btn("📤 Send this puzzle to someone", "primary", share));
+    var next = SIZES[SIZES.indexOf(n) + 1];
+    if (next) acts.appendChild(K.btn("Try " + R.SIZES[next].label + " " + next + "×" + next, "", function () { locked = false; if (!shared) try { localStorage.setItem(SIZE_KEY, String(next)); } catch (e) {} newGame(next, K.newSeed()); }));
+    else acts.appendChild(K.btn("🔀 Another " + n + "×" + n, "", function () { locked = false; newGame(n, K.newSeed()); }));
+    if (shared) acts.appendChild(K.btn("📷 Make one with your own photo", "", function () { location.href = "/#make"; }));
+    else acts.appendChild(K.btn("🖼️ Play Face Slide" + (name ? " with " + name : ""), "", function () { location.href = "/face-slide/"; }));
+    $("win").classList.remove("hidden");
+    $("bShare").classList.add("hidden"); // the win card has its own Send button
+    setMsg("");
+  }
+
+  /* ---------- share ---------- */
+
+  function share() {
+    var name = person.name, w = name || "a photo";
+    K.openShareSheet({
+      photo: person.photo,
+      title: "Face Regions" + (name ? " with " + name : ""),
+      subtitle: game.n + "×" + game.n + " · the same board you " + (game.won ? "just solved" : "are playing"),
+      text: (name ? "I made you a Face Regions puzzle with " + name + " in it." : "I made you a Face Regions photo puzzle.") +
+        (game.won ? " I did it in " + K.fmtTime(game.elapsed) + ". Your turn!" : " Put " + (name || "the photo") + " once in every row, column, and color."),
+      getUrl: function () {
+        return K.compactPhoto(person.photo).then(function (small) {
+          return location.origin + "/face-regions/#" + K.encodeShare({ g: "regions", s: game.n, k: game.seed, n: name, t: game.won ? game.elapsed : 0, p: small });
+        });
+      },
+      onShared: function (how) { gaTrack("face_regions_share", { how: how, size: game.n }); },
+    });
+  }
+  $("bShare").addEventListener("click", share);
+
+  /* ---------- start ---------- */
+
+  function startPlay() {
+    $("welcome").classList.add("hidden");
+    $("play").classList.remove("hidden");
+    showPerson();
+    if (shared) return newGame(shared.s, shared.k);
+    var st = K.getJSON(STATE_KEY, null);
+    if (game && game.puzzle) { $("win").classList.toggle("hidden", !game.won); return; }
+    if (st && SIZES.indexOf(st.n) >= 0 && typeof st.seed === "number") return newGame(st.n, st.seed, st);
+    var n = 5;
+    try { var s = parseInt(localStorage.getItem(SIZE_KEY), 10); if (SIZES.indexOf(s) >= 0) n = s; } catch (e) {}
+    newGame(n, K.newSeed());
+  }
+
+  if (shared) {
+    person = { name: shared.n, photo: shared.p, shared: true };
+    $("wPhoto").src = shared.p;
+    $("wTitle").textContent = shared.n ? "A puzzle starring " + shared.n : "A photo puzzle for you";
+    $("wText").textContent = "Someone sent you a Face Regions puzzle (" + shared.s + "×" + shared.s + "). Put " + (shared.n || "the photo") + " once in every row, every column, and every color.";
+    if (shared.t) { $("wBeat").textContent = "Their time: " + K.fmtTime(shared.t); $("wBeat").classList.remove("hidden"); }
+    $("welcome").classList.remove("hidden");
+    $("wStart").addEventListener("click", startPlay);
+    $("wStart").focus();
+  } else {
+    person = K.loadPerson();
+    if (person) startPlay(); else openSetup(false);
+  }
+
+  // test hooks (used by the automated checks; harmless for players)
+  window.faceRegions = {
+    get game() { return game; },
+    solve: function () { game.placed = game.puzzle.solution.map(function (c, r) { return r * game.n + c; }); update(-1); saveState(); },
+  };
+})();
+</script>
+</body>
+</html>

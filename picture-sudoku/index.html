@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Picture Sudoku | OpenDoku</title>
+<meta name="description" content="Picture Sudoku, an OpenDoku Original: sudoku with pictures instead of numbers. Every row, column, and box gets each picture once. Start on 4×4, then try 6×6.">
+<meta property="og:title" content="Picture Sudoku — an OpenDoku Original">
+<meta property="og:description" content="Sudoku with pictures instead of numbers. Start on 4×4, then try 6×6.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍓</text></svg>">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0b1220">
+<script>
+  if('serviceWorker' in navigator)
+    addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+</script>
+<!-- Google tag (gtag.js) — the opendoku.com GA4 property; shared by every game on this domain -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PLCVJ82B8T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-PLCVJ82B8T');
+  function gaTrack(n, p) { try { gtag('event', n, p || {}); } catch (e) {} }
+</script>
+<link rel="stylesheet" href="/kit/od.css">
+<style>
+  .setrow{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .setrow .lbl{font-weight:800; font-size:.85rem; color:var(--dim);}
+  .setrow .chip{flex:0 0 auto; min-width:0; padding:6px 12px; font-size:.85rem;}
+  .pboard{--grid:#3a5a80; display:grid; width:100%; max-width:420px; margin:0 auto; aspect-ratio:1; background:var(--grid); border:3px solid var(--grid); border-radius:14px; overflow:hidden; gap:1px; user-select:none; -webkit-user-select:none;}
+  [data-theme="light"] .pboard{--grid:#a8a29e;}
+  .pcell{position:relative; display:flex; align-items:center; justify-content:center; padding:0; border:0; margin:0; background:var(--panel); color:var(--ink); font-size:var(--fs); line-height:1; min-width:0; min-height:0; cursor:pointer;}
+  .pcell.given{background:var(--panel2); cursor:default;}
+  [data-theme="light"] .pcell.given{background:#ece9e4;}
+  .pcell.bx{margin-right:2px;} .pcell.by{margin-bottom:2px;}
+  .pcell.peer{background:var(--btn);}
+  .pcell.given.peer{background:var(--btn);}
+  .pcell.same{box-shadow:inset 0 0 0 3px var(--violet);}
+  .pcell.sel{box-shadow:inset 0 0 0 4px var(--accent); z-index:1;}
+  .pcell.bad{background:var(--bad); }
+  .pcell.bad .pic{animation:shake .35s;}
+  @keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+  .pcell.hinted{animation:hint 1.2s ease-out;}
+  @keyframes hint{0%,60%{box-shadow:inset 0 0 0 4px var(--warm)}100%{box-shadow:none}}
+  .pcell.pop .pic{animation:pop .25s ease-out;}
+  @keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .pboard.won .pcell .pic{animation:bounce .6s ease-out both; animation-delay:calc(var(--i) * 40ms);}
+  @keyframes bounce{40%{transform:scale(1.25) rotate(-8deg)}}
+  .palette{display:grid; gap:8px; margin-top:12px;}
+  .palette button{min-height:60px; border-radius:16px; background:var(--btn); border:1px solid var(--btnbd); font-size:1.7rem; line-height:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 0;}
+  .palette button small{font-size:.68rem; font-weight:800; color:var(--dim);}
+  .palette button.used{opacity:.45;}
+  .palette button:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+</style>
+</head>
+<body data-theme="dark">
+
+<header class="om-bar">
+  <div class="om-in">
+    <a href="https://opendoku.com/" title="All the OpenDoku games">← OpenDoku.com</a>
+    <span class="right">
+      <span class="menuwrap">
+        <button id="gamesBtn" title="All the games" aria-haspopup="true" aria-expanded="false">☰<span class="lbl"> Menu</span></button>
+        <nav id="gamesMenu" hidden>
+          <a href="https://opendoku.com/">🧩 All games</a>
+          <a href="/face-regions/">🎨 Face Regions</a>
+          <a href="/face-slide/">🖼️ Face Slide</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="/picture-sudoku/">🍓 Picture Sudoku</a>
+          <a href="/mega-slide/">🌄 Mega Slide</a>
+          <a href="/slopedoku/">🏔️ SlopeDoku</a>
+          <a href="/surfdoku/">🌞 SurfDoku</a>
+          <a href="/minedoku/">⛏️ MineDoku</a>
+          <div class="sep" aria-hidden="true"></div>
+          <a href="https://opendoku.com/about/">About OpenDoku</a>
+        </nav>
+      </span>
+      <button id="themeBtn" class="roundbtn" title="Light / dark">🌙</button>
+    </span>
+  </div>
+</header>
+
+<main class="app">
+  <h1 class="title">Picture <span>Sudoku</span></h1>
+  <p class="lede">Sudoku with pictures instead of numbers.</p>
+
+  <div class="chips" id="sizes" role="group" aria-label="Board size"></div>
+  <div class="setrow" role="group" aria-label="Pictures"><span class="lbl">Pictures:</span><span id="sets" class="setrow" style="margin:0"></span></div>
+  <div class="od-rule"><span class="ico" aria-hidden="true">🍓</span><p>Fill the board so every <b>row</b>, every <b>column</b>, and every <b>box</b> has each picture once.</p></div>
+  <div class="od-status"><span id="count"></span><span class="od-dim" id="clock">0:00</span></div>
+  <div id="boardHost"></div>
+  <div class="palette" id="palette" role="group" aria-label="Pick a picture"></div>
+  <p class="od-msg" id="msg" aria-live="polite"></p>
+  <div class="od-toolbar">
+    <button class="od-btn" id="bHint">💡 Hint</button>
+    <button class="od-btn" id="bClear">↺ Clear</button>
+    <button class="od-btn" id="bNew">🔀 New</button>
+  </div>
+  <section id="win" class="od-win hidden" aria-live="polite">
+    <div class="big" aria-hidden="true">🎉</div>
+    <h2>Every picture in its place!</h2>
+    <p id="winText"></p>
+    <div class="acts" id="winActs"></div>
+  </section>
+  <details class="od-how">
+    <summary>How to play</summary>
+    <ul>
+      <li><b>Tap an empty square</b>, then tap a picture below the board to fill it. Tap 🧽 to empty a square.</li>
+      <li>Every <b>row</b>, every <b>column</b>, and every <b>box</b> (the blocks with thicker lines) gets each picture exactly once.</li>
+      <li>Pictures that repeat in a row, column, or box turn red.</li>
+      <li><b>💡 Hint</b> takes out a wrong picture, or fills in a square that can only be one thing.</li>
+      <li>Every puzzle has one answer, and you can reach it without guessing.</li>
+      <li>On a keyboard: arrow keys move, number keys place pictures in palette order, Backspace empties.</li>
+    </ul>
+  </details>
+</main>
+
+<footer class="om-foot">
+  <div class="om-in">
+    <nav aria-label="Open Mirror LLC">
+      <p><a href="https://openmirrorllc.com">OpenMirrorLLC.com</a> <span aria-hidden="true">·</span>
+        <a href="/about/">About</a> <span aria-hidden="true">·</span>
+        <a href="https://crossheartpray.com" aria-label="Visit CrossHeartPray"><span aria-hidden="true">✝️ ❤️ 🙏</span></a></p>
+      <p class="om-sub"><a href="/about/#contact">Contact</a> <span aria-hidden="true">·</span>
+        <a href="/about/#disclaimer">Disclaimer</a></p>
+    </nav>
+    <p class="om-legal">Open Mirror LLC is a small independent company.</p>
+  </div>
+</footer>
+
+<script src="/games.js" defer></script>
+<script src="/kit/photo-kit.js"></script>
+<script src="/kit/sudoku-engine.js"></script>
+<script>
+(function () {
+  "use strict";
+  var K = OD_Kit, P = OD_Sudoku, $ = function (id) { return document.getElementById(id); };
+  K.initChrome();
+
+  var SIZES = [4, 6];
+  var SETS = {
+    fruit: { label: "🍎 Fruit", pics: ["🍎", "🍌", "🍇", "🍊", "🍓", "🍒"], names: ["apple", "banana", "grapes", "orange", "strawberry", "cherries"] },
+    pets: { label: "🐶 Pets", pics: ["🐶", "🐱", "🐰", "🐻", "🐼", "🦊"], names: ["dog", "cat", "rabbit", "bear", "panda", "fox"] },
+    sports: { label: "⚽ Sports", pics: ["⚽", "🏀", "🏈", "⚾", "🎾", "🏐"], names: ["soccer ball", "basketball", "football", "baseball", "tennis ball", "volleyball"] },
+  };
+  var STATE_KEY = "od_ps_state_v1", PREF_KEY = "od_ps_prefs", BEST_KEY = "od_ps_best_v1";
+  var prefs = K.getJSON(PREF_KEY, { size: 4, set: "fruit" });
+  if (SIZES.indexOf(prefs.size) < 0) prefs.size = 4;
+  if (!SETS[prefs.set]) prefs.set = "fruit";
+  var game = null, cells = [], sel = -1, tick = null;
+
+  function saveState() {
+    if (!game) return;
+    K.setJSON(STATE_KEY, { size: game.size, seed: game.seed, grid: game.grid, hints: game.hints, elapsed: game.elapsed, won: game.won });
+  }
+
+  function newGame(size, seed, restore) {
+    stopClock();
+    var p = P.generate(size, seed);
+    var grid = p.puzzle.slice();
+    if (restore && Array.isArray(restore.grid) && restore.grid.length === size * size) {
+      restore.grid.forEach(function (v, i) { if (!p.puzzle[i] && v >= 0 && v <= size) grid[i] = v | 0; });
+    }
+    game = { size: size, seed: seed >>> 0, p: p, grid: grid, hints: restore ? restore.hints | 0 : 0, elapsed: restore ? restore.elapsed | 0 : 0, won: false };
+    sel = -1;
+    $("win").classList.add("hidden");
+    renderChips();
+    buildBoard();
+    buildPalette();
+    update(-1);
+    if (restore && restore.won && P.isWon(p, grid)) { game.won = true; showWin(false); }
+    else if (!restore) setMsg("Tap an empty square, then pick a picture.");
+    $("clock").textContent = K.fmtTime(game.elapsed);
+    saveState();
+  }
+
+  function renderChips() {
+    var host = $("sizes");
+    host.innerHTML = "";
+    SIZES.forEach(function (n) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(game.size === n));
+      b.innerHTML = P.SIZES[n].label + "<small>" + n + "×" + n + "</small>";
+      b.addEventListener("click", function () {
+        if (game.size === n) return;
+        prefs.size = n; K.setJSON(PREF_KEY, prefs);
+        newGame(n, K.newSeed());
+      });
+      host.appendChild(b);
+    });
+    var sh = $("sets");
+    sh.innerHTML = "";
+    Object.keys(SETS).forEach(function (k) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(prefs.set === k));
+      b.textContent = SETS[k].label;
+      b.addEventListener("click", function () {
+        prefs.set = k; K.setJSON(PREF_KEY, prefs);
+        renderChips(); paint(); buildPalette(); update(-1);
+      });
+      sh.appendChild(b);
+    });
+  }
+
+  function pic(v) { return v ? SETS[prefs.set].pics[v - 1] : ""; }
+  function picName(v) { return SETS[prefs.set].names[v - 1]; }
+
+  function buildBoard() {
+    var n = game.size, p = game.p, board = document.createElement("div");
+    board.className = "pboard"; board.id = "board";
+    board.setAttribute("role", "grid"); board.setAttribute("aria-label", n + " by " + n + " picture sudoku");
+    board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+    board.style.setProperty("--fs", n === 4 ? "clamp(28px, 10vw, 44px)" : "clamp(20px, 7vw, 32px)");
+    cells = [];
+    for (var i = 0; i < n * n; i++) {
+      var r = (i / n) | 0, c = i % n;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "pcell" + (p.puzzle[i] ? " given" : "") +
+        ((c + 1) % p.boxC === 0 && c < n - 1 ? " bx" : "") + ((r + 1) % p.boxR === 0 && r < n - 1 ? " by" : "");
+      b.setAttribute("role", "gridcell");
+      b.dataset.i = i;
+      b.style.setProperty("--i", r + c);
+      b.innerHTML = '<span class="pic"></span>';
+      b.addEventListener("click", function () { select(+this.dataset.i); });
+      b.addEventListener("keydown", onKey);
+      board.appendChild(b);
+      cells.push(b);
+    }
+    $("boardHost").innerHTML = "";
+    $("boardHost").appendChild(board);
+    paint();
+  }
+
+  function paint() {
+    cells.forEach(function (b, i) { b.firstChild.textContent = pic(game.grid[i]); });
+  }
+
+  function buildPalette() {
+    var n = game.size, host = $("palette");
+    host.innerHTML = "";
+    host.style.gridTemplateColumns = "repeat(" + (n + 1) + ", 1fr)";
+    for (var v = 1; v <= n; v++) {
+      var b = document.createElement("button");
+      b.type = "button"; b.dataset.v = v;
+      b.innerHTML = '<span aria-hidden="true">' + pic(v) + "</span><small></small>";
+      b.setAttribute("aria-label", picName(v));
+      b.addEventListener("click", function () { put(+this.dataset.v); });
+      host.appendChild(b);
+    }
+    var e = document.createElement("button");
+    e.type = "button"; e.dataset.v = 0;
+    e.innerHTML = '<span aria-hidden="true">🧽</span><small>empty</small>';
+    e.setAttribute("aria-label", "Empty the square");
+    e.addEventListener("click", function () { put(0); });
+    host.appendChild(e);
+  }
+
+  function select(i) {
+    if (game.won) return;
+    sel = i;
+    update(-1);
+    if (game.p.puzzle[i]) setMsg("That square is part of the puzzle. Pick an empty one.");
+    else setMsg("");
+  }
+
+  function put(v) {
+    if (game.won) return;
+    if (sel < 0) { setMsg("Tap an empty square first."); return; }
+    if (game.p.puzzle[sel]) { setMsg("That square is part of the puzzle. Pick an empty one."); return; }
+    startClock();
+    game.grid[sel] = v;
+    update(v ? sel : -1);
+    saveState();
+  }
+
+  function onKey(e) {
+    var n = game.size, i = +this.dataset.i, r = (i / n) | 0, c = i % n, t = -1;
+    if (e.key === "ArrowRight" && c < n - 1) t = i + 1;
+    if (e.key === "ArrowLeft" && c > 0) t = i - 1;
+    if (e.key === "ArrowDown" && r < n - 1) t = i + n;
+    if (e.key === "ArrowUp" && r > 0) t = i - n;
+    if (t >= 0) { e.preventDefault(); cells[t].focus(); select(t); return; }
+    var d = parseInt(e.key, 10);
+    if (d >= 1 && d <= n) { e.preventDefault(); sel = i; put(d); }
+    if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") { e.preventDefault(); sel = i; put(0); }
+  }
+
+  function update(justPut) {
+    var n = game.size, p = game.p, grid = game.grid;
+    var bad = {};
+    P.conflicts(n, grid).forEach(function (i) { bad[i] = true; });
+    var units = P.unitsFor(n), peers = {};
+    if (sel >= 0) units.forEach(function (u) { if (u.indexOf(sel) >= 0) u.forEach(function (x) { peers[x] = true; }); });
+    var sv = sel >= 0 ? grid[sel] : 0;
+    cells.forEach(function (b, i) {
+      b.firstChild.textContent = pic(grid[i]);
+      b.classList.toggle("sel", i === sel);
+      b.classList.toggle("peer", !!peers[i] && i !== sel);
+      b.classList.toggle("same", !!sv && grid[i] === sv && i !== sel);
+      b.classList.toggle("bad", !!bad[i] && !p.puzzle[i]);
+      b.classList.toggle("pop", i === justPut);
+      var r = ((i / n) | 0) + 1, c = (i % n) + 1;
+      b.setAttribute("aria-label", "Row " + r + ", column " + c + ", " + (grid[i] ? picName(grid[i]) : "empty") +
+        (p.puzzle[i] ? ", given" : "") + (bad[i] && !p.puzzle[i] ? ", repeats" : ""));
+    });
+    var left = 0, counts = {};
+    grid.forEach(function (v) { if (!v) left++; else counts[v] = (counts[v] || 0) + 1; });
+    Array.prototype.forEach.call($("palette").children, function (b) {
+      var v = +b.dataset.v;
+      if (!v) return;
+      var rest = n - (counts[v] || 0);
+      b.querySelector("small").textContent = rest > 0 ? rest + " left" : "done";
+      b.classList.toggle("used", rest <= 0);
+    });
+    $("count").textContent = left ? left + (left === 1 ? " square to go" : " squares to go") : "Board full";
+    var badCount = Object.keys(bad).length;
+    if (badCount) setMsg("A picture repeats in a row, column, or box. Red squares show where.", "bad");
+    else if (!left && !P.isWon(p, grid)) setMsg("Almost: something's not quite right yet.", "bad");
+    else if (justPut >= 0 && $("msg").classList.contains("bad")) setMsg("");
+    if (!left && P.isWon(p, grid) && !game.won) { game.won = true; stopClock(); showWin(true); }
+  }
+
+  function setMsg(t, kind) { var m = $("msg"); m.textContent = t; m.className = "od-msg" + (kind ? " " + kind : ""); }
+
+  $("bHint").addEventListener("click", function () {
+    if (game.won) return;
+    startClock();
+    var h = P.hint(game.p, game.grid);
+    if (!h) return;
+    game.hints++;
+    var b = cells[h.cell];
+    b.classList.remove("hinted"); void b.offsetWidth; b.classList.add("hinted");
+    sel = h.cell;
+    if (h.type === "wrong") {
+      var wrongName = picName(game.grid[h.cell]);
+      game.grid[h.cell] = 0;
+      update(-1);
+      setMsg("That " + wrongName + " didn't belong there, so it's been taken out.", "bad");
+    } else {
+      game.grid[h.cell] = h.value;
+      var where = h.why === "only" ? "nothing else fits in that square" : "it's the only spot left for it in that " + h.why;
+      update(h.cell);
+      if (!game.won) setMsg("The " + picName(h.value) + " goes here: " + where + ".", "good");
+    }
+    saveState();
+  });
+  $("bClear").addEventListener("click", function () {
+    if (game.won) return;
+    game.grid = game.p.puzzle.slice();
+    sel = -1; update(-1); saveState();
+    setMsg("Board cleared back to the starting pictures.");
+  });
+  $("bNew").addEventListener("click", function () { newGame(game.size, K.newSeed()); });
+
+  function startClock() {
+    if (game.won || tick) return;
+    tick = setInterval(function () {
+      if (document.hidden) return;
+      game.elapsed++;
+      $("clock").textContent = K.fmtTime(game.elapsed);
+      if (game.elapsed % 5 === 0) saveState();
+    }, 1000);
+  }
+  function stopClock() { clearInterval(tick); tick = null; }
+
+  function showWin(fresh) {
+    var n = game.size, best = K.getJSON(BEST_KEY, {}), isBest = false;
+    sel = -1;
+    if (fresh) {
+      if (!best[n] || game.elapsed < best[n]) { best[n] = game.elapsed; K.setJSON(BEST_KEY, best); isBest = true; }
+      $("board").classList.add("won");
+      K.burst();
+      gaTrack("picture_sudoku_win", { size: n, hints: game.hints });
+    }
+    update(-1);
+    var bits = [n + "×" + n + " in " + K.fmtTime(game.elapsed), game.hints ? game.hints + (game.hints === 1 ? " hint" : " hints") : "no hints"];
+    if (isBest) bits.push("your best yet");
+    $("winText").textContent = bits.join(" · ");
+    var acts = $("winActs");
+    acts.innerHTML = "";
+    acts.appendChild(K.btn("🔀 Another " + n + "×" + n, "primary", function () { newGame(n, K.newSeed()); }));
+    if (n === 4) acts.appendChild(K.btn("Try Medium 6×6", "", function () { prefs.size = 6; K.setJSON(PREF_KEY, prefs); newGame(6, K.newSeed()); }));
+    acts.appendChild(K.btn("🎨 Make a photo puzzle", "", function () { location.href = "/#make"; }));
+    $("win").classList.remove("hidden");
+    setMsg("");
+  }
+
+  var st = K.getJSON(STATE_KEY, null);
+  if (st && SIZES.indexOf(st.size) >= 0 && typeof st.seed === "number") newGame(st.size, st.seed, st);
+  else newGame(prefs.size, K.newSeed());
+
+  window.pictureSudoku = {
+    get game() { return game; },
+    solve: function () { game.grid = game.p.solution.slice(); update(-1); saveState(); },
+  };
+})();
+</script>
+</body>
+</html>
