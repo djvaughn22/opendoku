@@ -261,6 +261,8 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
   @media (max-width:430px){.om-bar .site{display:none;}}
   #infoPanel{position:fixed; inset:0; background:rgba(8,14,24,.82); display:flex; align-items:center; justify-content:center; z-index:20; padding:14px;}
   #infoPanel[hidden]{display:none;}
+  .info-top{position:sticky; top:-26px; margin:-26px -30px 8px; padding:8px 10px; display:flex; justify-content:flex-end; background:var(--panel); border-radius:16px 16px 0 0; z-index:1;}
+  .info-top button{min-height:44px; min-width:44px;}
   /* om-fam-standard: match the Open Mirror family menu (pill trigger + rows) */
   #gamesBtn{display:inline-flex; align-items:center; gap:6px; width:auto; min-height:40px; padding:8px 14px; border-radius:999px; font-size:.9rem; font-weight:900; font-family:system-ui,sans-serif;}
   @media(max-width:640px){#gamesBtn .lbl{display:none;}}
@@ -380,6 +382,8 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
 
   <div id="infoPanel" hidden>
     <div class="ov" style="max-width:390px;width:100%;text-align:left;max-height:84vh;overflow-y:auto">
+      <!-- Nov 20 2026: on a phone the rules run past the screen; a close button stays pinned at the top so nobody has to scroll to the end to start playing. -->
+      <div class="info-top"><button id="infoCloseTop" type="button" aria-label="Close the rules and play">Close ✕</button></div>
       <h2 style="margin:0 0 2px">SlopeDoku</h2>
       <p style="margin:0 0 2px;font-size:.72rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-family:system-ui,sans-serif">An OpenDoku game · Open Mirror LLC</p>
       <p style="margin:8px 0 0;color:var(--dim);font-size:.9rem;line-height:1.55">The climb: green teaches the moves, blue plays numeral AND sport at once, the black diamond is a pure icon sudoku, and the double black diamond is the summit — two full sudokus in every tile.</p>
@@ -534,6 +538,7 @@ if(window.parent===window && /(^|\.)(snowdoku|opendoku)\.com$/.test(location.hos
   applyTheme(localStorage.getItem('om-theme')==='light'?'light':'dark');
   $('infoBtn').addEventListener('click',()=>{$('infoPanel').hidden=false;});
   $('infoClose').addEventListener('click',()=>{$('infoPanel').hidden=true;});
+  $('infoCloseTop').addEventListener('click',()=>{$('infoPanel').hidden=true;});
   $('infoPanel').addEventListener('click',(e)=>{if(e.target.id==='infoPanel')$('infoPanel').hidden=true;});
   const sndBtn=$('sndBtn');
   sndBtn.textContent=SFX.on?'🔊':'🔇';

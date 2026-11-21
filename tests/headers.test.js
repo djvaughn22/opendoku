@@ -38,3 +38,15 @@ test("the snowdoku.com home redirect is still there", () => {
   const r = cfg.redirects.find((x) => x.has && x.has.some((h) => h.value === "snowdoku.com"));
   assert.equal(r.destination, "/slopedoku/");
 });
+
+// Nov 20 2026: the first-visit rules panel has a close button pinned at its top,
+// so a phone player doesn't have to scroll to the end of the rules to play.
+for (const game of ["slopedoku", "surfdoku"]) {
+  test(`${game}: the rules panel can be closed from its top`, () => {
+    const html = require("node:fs").readFileSync(require("node:path").join(__dirname, "..", game, "index.html"), "utf8");
+    const panel = html.slice(html.indexOf('<div id="infoPanel"'));
+    assert.ok(panel.indexOf('id="infoCloseTop"') < panel.indexOf("<h2"), "close button comes before the rules");
+    assert.match(html, /\$\('infoCloseTop'\)\.addEventListener\('click',\(\)=>\{\$\('infoPanel'\)\.hidden=true;\}\)/);
+    assert.match(html, /\.info-top\{position:sticky;/);
+  });
+}
