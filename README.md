@@ -3,6 +3,14 @@
 Born as an iDontCry idea, built through StepInTheRing.com. Every game is one
 static file — no build step, works offline, embeds anywhere.
 
+## Messaging (owner, 2026-11-24)
+
+OpenDoku is Sudoku and puzzles, and its pages say only that. No plugs for
+other Open Mirror sites (the About page's Step In The Ring line and its
+"An Open Mirror LLC series" tag were removed), no Open Mirror story. About
+keeps one line saying Open Mirror LLC builds it. Full rules: the hub repo's
+`docs/MESSAGING.md`.
+
 ## The games
 
 - **⛷️ SlopeDoku** (`/slopedoku/`, snowdoku.com redirects here) — winter brain
